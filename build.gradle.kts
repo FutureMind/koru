@@ -11,5 +11,5 @@ buildscript {
         classpath("de.mannodermaus.gradle.plugins:android-junit5:1.7.0.0")
     }
 }
-group = "com.futuremind.iossuspendwrapper"
+
 version = "0.1"

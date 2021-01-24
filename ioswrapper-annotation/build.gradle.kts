@@ -1,6 +1,7 @@
 plugins {
     kotlin("multiplatform")
     id("java-library")
+    id("maven-publish")
 }
 
 repositories {
@@ -9,14 +10,37 @@ repositories {
 
 kotlin {
 
-    jvm()
-    ios()
+    jvm {
+        mavenPublication {
+            version = "0.1"
+            artifactId = "suspend-wrapper"
+            group = "com.futuremind"
+        }
+    }
+    ios {
+        mavenPublication {
+            version = "0.1"
+            artifactId = "suspend-wrapper"
+            group = "com.futuremind"
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt")
             }
         }
     }
+}
+
+publishing {
+//    publications {
+//        create<MavenPublication>("maven") {
+//            group = "com.futuremind"
+//            version = "0.1"
+//            artifactId = "suspend-wrapper"
+////            from(components["java"])
+//        }
+//    }
 }
