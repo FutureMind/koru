@@ -15,26 +15,12 @@ repositories {
 kotlin {
 
     jvm() //this is only used as kapt (annotation processor, so pure jvm)
-    {
-        mavenPublication {
-            version = "0.1"
-            artifactId = "suspend-wrapper-processor"
-            group = "com.futuremind"
-        }
-    }
 
     sourceSets {
 
         val jvmMain by getting {
             dependencies {
 
-                /*
-                TODO
-                    Publishing is not able to resolve a dependency on a project with multiple publications that have different coordinates.
-Found the following publications in project ':ioswrapper-annotation':
-  - Maven publication 'kotlinMultiplatform' with coordinates com.futuremind:ioswrapper-annotation:unspecified
-  - Maven publication 'maven' with coordinates com.futuremind:suspend-wrapper:0.1
-                 */
                 implementation(project(":ioswrapper-annotation"))
 
                 //code generation
@@ -60,16 +46,12 @@ Found the following publications in project ':ioswrapper-annotation':
     }
 }
 
-//publishing {
-//    publications {
-//        create<MavenPublication>("maven") {
-//            group = "com.futuremind"
-//            version = "0.1"
-//            artifactId = "suspend-wrapper-processor"
-//            from(components["java"])
-//        }
-//    }
-//}
+publishing {
+    publications.all {
+        version = "0.1"
+        group = "com.futuremind"
+    }
+}
 
 tasks.withType<Test> {
     useJUnitPlatform() //otherwise junit5 tests cannot be run from jvmTest

@@ -10,20 +10,8 @@ repositories {
 
 kotlin {
 
-    jvm {
-        mavenPublication {
-            version = "0.1"
-            artifactId = "suspend-wrapper"
-            group = "com.futuremind"
-        }
-    }
-    ios {
-        mavenPublication {
-            version = "0.1"
-            artifactId = "suspend-wrapper"
-            group = "com.futuremind"
-        }
-    }
+    jvm()
+    ios()
 
     sourceSets {
         val commonMain by getting {
@@ -35,12 +23,8 @@ kotlin {
 }
 
 publishing {
-//    publications {
-//        create<MavenPublication>("maven") {
-//            group = "com.futuremind"
-//            version = "0.1"
-//            artifactId = "suspend-wrapper"
-////            from(components["java"])
-//        }
-//    }
+    publications.all {
+        version = "0.1"
+        group = "com.futuremind"
+    }
 }
