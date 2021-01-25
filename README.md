@@ -75,13 +75,14 @@ becomes:
 ```kotlin
 public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
 
-    public fun getUser(username: String): User? = wrapped.getUser(username)
-
     public fun loadUser(username: String): SuspendWrapper<User?> =
         SuspendWrapper(null) { wrapped.loadUser(username) }
 
     public fun observeUser(username: String): FlowWrapper<User?> =
         FlowWrapper(null, wrapped.observeUser(username))
+        
+    public fun getUser(username: String): User? = wrapped.getUser(username)
+    
 }
 ```
 
