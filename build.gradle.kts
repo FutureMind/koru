@@ -12,4 +12,6 @@ buildscript {
     }
 }
 
-version = "0.1"
+
+group = "com.futuremind"
+version = "0.1.1"

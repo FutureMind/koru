@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     kotlin("multiplatform")
     id("java-library")
@@ -23,8 +25,23 @@ kotlin {
 }
 
 publishing {
+
     publications.all {
-        version = "0.1"
-        group = "com.futuremind"
+        version = rootProject.version
+        group = rootProject.group
+    }
+
+    repositories {
+        maven {
+            name = "bintray"
+            setUrl("https://api.bintray.com/content/mklimczak/kmm-ios-suspendwrapper/ioswrapper-annotation/$version/;publish=1;override=0")
+            credentials {
+                //TODO get from env vars in CI process
+                val properties = Properties()
+                properties.load(project.rootProject.file("local.properties").inputStream())
+                username = properties["bintrayUsername"] as String
+                password = properties["bintrayKey"] as String
+            }
+        }
     }
 }
