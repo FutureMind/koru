@@ -13,7 +13,9 @@ Let's say you have a class in the `shared` module, that looks like this:
 ```kotlin
 @WrapForIos
 class LoadUserUseCase(private val service: Service) {
+
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
+    
 }
 ```
 
@@ -23,7 +25,10 @@ When you add `@WrapForIos` annotation to the class, a wrapper is generated:
 
 ```kotlin
 public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
-  public fun loadUser(username: String): SuspendWrapper<User?> = SuspendWrapper(null) { wrapped.loadUser(username) }
+
+  public fun loadUser(username: String): SuspendWrapper<User?> = 
+      SuspendWrapper(null) { wrapped.loadUser(username) }
+  
 }
 ```
 
@@ -43,28 +48,119 @@ From here it can be easily wrapped into RxSwift `Single<User?>` or Combine `AnyP
 
 ### Suspend, Flow and blocking function
 
-*`To be documented` but generally suspend becomes SuspendWrapper, Flow becomes FlowWrapper and regular functions are called directly.*
+The wrappers handle original function signatures in three ways:
 
-### Generate interfaces
+| Original | Wrapper |
+|-|-|
+| `suspend` fun returning `T` | fun returning `SuspendWrapper<T>` |
+| fun returning `Flow<T>` | fun returning `FlowWrapper<T>` |
+| fun returning `T` | fun returning `T` |
 
-*`To be documented` but there are two options. Either use `@WrapForIos(generateInterface = true)` or add `@WrapForIos` to both the class and the interface it extends. The purpose of this is to provide protocols for faking in Swift tests.*
+So, for example, this class:
 
-### Customizing generated names
+```kotlin
+@WrapForIos
+class LoadUserUseCase(private val service: Service) {
 
-*`To be documented`*
-
-### Provide the scope automatically
-
-*`To be documented`* but generally:
-
-```
-@ExportedScopeProvider
-class MainScopeProvider : ScopeProvider {
-    override val scope = MainScope()
+    suspend fun loadUser(username: String) : User? = service.loadUser(username)
+    
+    fun observeUser(username: String) : Flow<User?> = service.observeUser(username)
+    
+    fun getUser(username: String) : User? = service.getUser(username)
 }
 ```
 
-...and then `@WrapForIos(launchOnScope = MainScopeProvider::class)`
+becomes:
+
+```kotlin
+public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
+
+    public fun getUser(username: String): User? = wrapped.getUser(username)
+
+    public fun loadUser(username: String): SuspendWrapper<User?> =
+        SuspendWrapper(null) { wrapped.loadUser(username) }
+
+    public fun observeUser(username: String): FlowWrapper<User?> =
+        FlowWrapper(null, wrapped.observeUser(username))
+}
+```
+
+### Generate interfaces
+
+If you write tests in your Swift code, you probably need protocols for your classes to use them as fakes in tests. In KMM protocols are derived from kotlin interfaces. Generated wrapper classes need their own interfaces and you've got two options to create them.
+
+#### Generate interface from class
+
+The easiest way is to just generate them automagically.
+
+```kotlin
+@WrapForIos(generateInterface = true)
+class LoadUserUseCase(private val service: Service) {
+
+    suspend fun loadUser(username: String) = service.loadUser(username)
+    
+}
+```
+
+This will create both the wrapper class `LoadUserUseCaseIos` and a corresponding interface `LoadUserUseCaseIosProtocol`.
+
+#### Generate interface from interface
+
+Or if you already have an interface, you can also `@WrapForIos` so that appropriate signatures are created for iOS protocols.
+
+```kotlin
+@WrapForIos
+interface LoadUserUseCase {
+
+    suspend fun loadUser(username: String): User?
+    
+}
+
+@WrapForIos
+class LoadUserUseCaseImpl(private val service: Service) : LoadUserUseCase {
+
+    override suspend fun loadUser(username: String) = service.loadUser(username)
+    
+}
+```
+
+This will create the wrapper class `LoadUserUseCaseImplIos` and a corresponding interface `LoadUserUseCaseIos`.
+
+**Note**: the annotation for the interface will change in future versions.
+
+### Customizing generated names
+
+*`To be documented`, but generally you can use `@WrapForIos(className = "MyOwnIosClassName")` and `@WrapForIos(generatedInterfaceName = "MyOwnIosProtocolName")`*
+
+### Provide the scope automatically
+
+One of the caveats of accessing suspend functions / Flows from Swift code is that you still have to provide `CoroutineScope` from the Swift code. This might upset your iOS team ;). In the spirit of keeping the shared code API as *business-focused* as possible, we can utilize `@ExportScopeProvider` to handle scopes automagically.
+
+First you need to show the suspend wrappers where to look for the scope, like this:
+
+```kotlin
+@ExportedScopeProvider
+class MainScopeProvider : ScopeProvider {
+
+    override val scope = MainScope()
+    
+}
+```
+
+And then you provide the scope like this
+
+```kotlin
+@WrapForIos(launchOnScope = MainScopeProvider::class)
+```
+
+Under the hood it generates a top level `MainScopeProvider` property which is then injected into the `SuspendWrapper`s and `FlowWrapper`s. Thanks to this, your iOS code can be simplified to just the callbacks, scope that launches coroutines is handled implicitly:
+
+```swift
+loadUserUseCaseIos.loadUser(username: "some username").subscribe(
+            onSuccess: { user in print(user?.description() ?? "none") },
+            onThrow: { error in print(error.description())}
+        )
+```
 
 
 ## Download
@@ -116,9 +212,4 @@ kotlin {
     }
     
 }
-
-kapt {
-    correctErrorTypes = true
-}
-
 ```
