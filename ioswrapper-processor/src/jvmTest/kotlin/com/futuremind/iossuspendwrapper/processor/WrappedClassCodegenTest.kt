@@ -7,6 +7,7 @@ import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import kotlin.reflect.KClass
 
 
 //TODO this is just a stub, more tests required
@@ -16,9 +17,9 @@ class WrappedClassCodegenTest {
     lateinit var tempDir: File
 
     @Test
-    fun `should throw if @ExportedScopeProvider is applied to class which doesn't extend ScopeProvider`() {
-
-        val source = SourceFile.kotlin(
+    fun `should throw if @ExportedScopeProvider is applied to class which doesn't extend ScopeProvider`() =
+        testThrowsCompilationError(
+        source = SourceFile.kotlin(
             "scopeProvider1.kt",
             """
                 package com.futuremind.kmm101.test
@@ -32,15 +33,9 @@ class WrappedClassCodegenTest {
                     override val scope = MainScope()
                 }
             """
-        )
-
-        val compilationResult = prepareCompilation(source).compile()
-
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        compilationResult.messages shouldContain "ExportedScopeProvider can only be applied to a class extending ScopeProvider interface"
-
-
-    }
+        ),
+        expectedMessage = "ExportedScopeProvider can only be applied to a class extending ScopeProvider interface"
+    )
 
     @Test
     fun `should generate top level property with scope provider`() {
@@ -76,6 +71,108 @@ class WrappedClassCodegenTest {
                     |public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()
                 """.trimMargin().trim()
 
+    }
+
+    @Test
+    fun `should generate wrapper for a suspend function returning Unit`() {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "unit1.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.iossuspendwrapper.WrapForIos
+                            
+                            @WrapForIos
+                            class FireAndWait {
+                                suspend fun doSthSuspending(whatever: Int){ }
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.FireAndWaitIos"
+        )
+
+        with(generatedClass.members.find { it.name == "doSthSuspending" }!!) {
+            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Unit>"
+        }
+    }
+
+    @Test
+    fun `should generate wrapper for a blocking function returning Unit`() {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "unit2.kt",
+                """
+                package com.futuremind.kmm101.test
+                
+                import com.futuremind.iossuspendwrapper.WrapForIos
+                
+                @WrapForIos
+                class FireAndWait {
+                    fun doSthBlocking(whatever: Int){ }
+                }
+            """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.FireAndWaitIos"
+        )
+
+        with(generatedClass.members.find { it.name == "doSthBlocking" }!!) {
+            returnType.toString() shouldBe "kotlin.Unit"
+        }
+    }
+
+    @Test
+    fun `should generate wrapper for a suspend function returning complex type`() {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "complexType1.kt",
+                """
+                package com.futuremind.kmm101.test
+                
+                import com.futuremind.iossuspendwrapper.WrapForIos
+                
+                interface Whatever
+
+                @WrapForIos
+                class LoadComplexTypeUseCase {
+                    suspend fun loadComplex(whatever: Int) : List<Map<Int, Whatever>>{ 
+                        return listOf()
+                    }
+                }
+            """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.LoadComplexTypeUseCaseIos"
+        )
+
+        with(generatedClass.members.find { it.name == "loadComplex" }!!) {
+            println("Type: $this")
+            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
+        }
+    }
+
+    private fun testThrowsCompilationError(source: SourceFile, expectedMessage: String) =
+        testThrowsCompilationError(arrayOf(source), expectedMessage)
+
+    private fun testThrowsCompilationError(
+        sources: Array<SourceFile>,
+        expectedMessage: String
+    ){
+        val compilationResult = prepareCompilation(*sources).compile()
+        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
+        compilationResult.messages shouldContain expectedMessage
+    }
+
+    private fun compileAndReturnGeneratedClass(
+        source: SourceFile,
+        generatedClassCanonicalName: String
+    ): KClass<out Any> {
+        val compilationResult = prepareCompilation(source).compile()
+        val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
+        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        return generatedClass.kotlin
     }
 
     private fun prepareCompilation(vararg sourceFiles: SourceFile) = KotlinCompilation()
