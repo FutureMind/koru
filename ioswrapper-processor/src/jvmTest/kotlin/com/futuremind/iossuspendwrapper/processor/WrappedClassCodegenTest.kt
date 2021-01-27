@@ -3,7 +3,6 @@ package com.futuremind.iossuspendwrapper.processor
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -101,7 +100,7 @@ class WrappedClassCodegenTest {
             .loadClass("com.futuremind.kmm101.test.FireAndWaitIos")
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        with(generatedClass.kotlin.members.find { it.name == "doSthSuspending" }!!){
+        with(generatedClass.kotlin.members.find { it.name == "doSthSuspending" }!!) {
             returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Unit>"
         }
     }
@@ -130,8 +129,41 @@ class WrappedClassCodegenTest {
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        with(generatedClass.kotlin.members.find { it.name == "doSthBlocking" }!!){
+        with(generatedClass.kotlin.members.find { it.name == "doSthBlocking" }!!) {
             returnType.toString() shouldBe "kotlin.Unit"
+        }
+    }
+
+    @Test
+    fun `should generate wrapper for a suspend function returning complex type`() {
+
+        val source = SourceFile.kotlin(
+            "complexType1.kt",
+            """
+                package com.futuremind.kmm101.test
+                
+                import com.futuremind.iossuspendwrapper.WrapForIos
+                
+                interface Whatever
+
+                @WrapForIos
+                class LoadComplexTypeUseCase {
+                    suspend fun loadComplex(whatever: Int) : List<Map<Int, Whatever>>{ 
+                        return listOf()
+                    }
+                }
+            """
+        )
+
+        val compilationResult = prepareCompilation(source).compile()
+
+        val generatedClass = compilationResult.classLoader
+            .loadClass("com.futuremind.kmm101.test.LoadComplexTypeUseCaseIos")
+
+        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        with(generatedClass.kotlin.members.find { it.name == "loadComplex" }!!) {
+            println("Type: $this")
+            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
         }
     }
 
