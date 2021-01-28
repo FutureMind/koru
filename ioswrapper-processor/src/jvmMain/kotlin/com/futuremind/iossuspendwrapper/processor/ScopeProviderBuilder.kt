@@ -10,7 +10,7 @@ import com.futuremind.iossuspendwrapper.ScopeProvider
 
 /**
  * Generates a top level property [ScopeProvider] exposing a CoroutineScope to be injected into
- * generated iOS classes via @WrapForIos(launchOnScope = ...).
+ * generated iOS classes via @ToNativeClass(launchOnScope = ...).
  */
 class ScopeProviderBuilder(
     packageName: String,

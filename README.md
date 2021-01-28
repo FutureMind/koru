@@ -11,7 +11,7 @@ Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 Let's say you have a class in the `shared` module, that looks like this:
 
 ```kotlin
-@WrapForIos
+@ToNativeClass
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
@@ -21,10 +21,10 @@ class LoadUserUseCase(private val service: Service) {
 
 Such use case can be easily consumed from Android code, but in Kotlin Native (iOS) suspend functions generate a completion handler which is a bit of a PITA to work with.
 
-When you add `@WrapForIos` annotation to the class, a wrapper is generated:
+When you add `@ToNativeClass` annotation to the class, a wrapper is generated:
 
 ```kotlin
-public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
+public class LoadUserUseCaseNative(private val wrapped: LoadUserUseCase) {
 
   public fun loadUser(username: String): SuspendWrapper<User?> = 
       SuspendWrapper(null) { wrapped.loadUser(username) }
@@ -59,7 +59,7 @@ The wrappers handle original function signatures in three ways:
 So, for example, this class:
 
 ```kotlin
-@WrapForIos
+@ToNativeClass
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
@@ -95,7 +95,7 @@ If you write tests in your Swift code, you probably need protocols for your clas
 The easiest way is to just generate them automagically.
 
 ```kotlin
-@WrapForIos(generateInterface = true)
+@ToNativeClass(generateInterface = true)
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) = service.loadUser(username)
@@ -107,17 +107,17 @@ This will create both the wrapper class `LoadUserUseCaseIos` and a corresponding
 
 #### Generate interface from interface
 
-Or if you already have an interface, you can also `@WrapForIos` so that appropriate signatures are created for iOS protocols.
+Or if you already have an interface, you can also `@ToNativeClass` so that appropriate signatures are created for iOS protocols.
 
 ```kotlin
-@WrapForIos
+@ToNativeClass
 interface LoadUserUseCase {
 
     suspend fun loadUser(username: String): User?
     
 }
 
-@WrapForIos
+@ToNativeClass
 class LoadUserUseCaseImpl(private val service: Service) : LoadUserUseCase {
 
     override suspend fun loadUser(username: String) = service.loadUser(username)
@@ -131,7 +131,7 @@ This will create the wrapper class `LoadUserUseCaseImplIos` and a corresponding 
 
 ### Customizing generated names
 
-*`To be documented`, but generally you can use `@WrapForIos(className = "MyOwnIosClassName")` and `@WrapForIos(generatedInterfaceName = "MyOwnIosProtocolName")`*
+*`To be documented`, but generally you can use `@ToNativeClass(className = "MyOwnIosClassName")` and `@ToNativeClass(generatedInterfaceName = "MyOwnIosProtocolName")`*
 
 ### Provide the scope automatically
 
@@ -151,7 +151,7 @@ class MainScopeProvider : ScopeProvider {
 And then you provide the scope like this
 
 ```kotlin
-@WrapForIos(launchOnScope = MainScopeProvider::class)
+@ToNativeClass(launchOnScope = MainScopeProvider::class)
 ```
 
 Under the hood it generates a top level `MainScopeProvider` property which is then injected into the `SuspendWrapper`s and `FlowWrapper`s. Thanks to this, your iOS code can be simplified to just the callbacks, scope that launches coroutines is handled implicitly:

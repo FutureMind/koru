@@ -82,9 +82,9 @@ class WrappedClassCodegenTest {
                 """
                             package com.futuremind.kmm101.test
                             
-                            import com.futuremind.iossuspendwrapper.WrapForIos
+                            import com.futuremind.iossuspendwrapper.ToNativeClass
                             
-                            @WrapForIos
+                            @ToNativeClass
                             class FireAndWait {
                                 suspend fun doSthSuspending(whatever: Int){ }
                             }
@@ -107,9 +107,9 @@ class WrappedClassCodegenTest {
                 """
                 package com.futuremind.kmm101.test
                 
-                import com.futuremind.iossuspendwrapper.WrapForIos
+                import com.futuremind.iossuspendwrapper.ToNativeClass
                 
-                @WrapForIos
+                @ToNativeClass
                 class FireAndWait {
                     fun doSthBlocking(whatever: Int){ }
                 }
@@ -132,11 +132,11 @@ class WrappedClassCodegenTest {
                 """
                 package com.futuremind.kmm101.test
                 
-                import com.futuremind.iossuspendwrapper.WrapForIos
+                import com.futuremind.iossuspendwrapper.ToNativeClass
                 
                 interface Whatever
 
-                @WrapForIos
+                @ToNativeClass
                 class LoadComplexTypeUseCase {
                     suspend fun loadComplex(whatever: Int) : List<Map<Int, Whatever>>{ 
                         return listOf()
