@@ -228,4 +228,54 @@ class TypesGenerationTest {
 
     }
 
+    @Test
+    fun `should generate interface with custom name via @ToNativeInterface(name)`() {
+
+        compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "interface6.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.iossuspendwrapper.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+
+                            @ToNativeInterface(name="CustomIosProtocol")
+                            interface InterfaceGenerationExample {
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.CustomIosProtocol",
+            tempDir = tempDir
+        )
+    }
+
+    @Test
+    fun `should generate class with custom name via @ToNativeClass(name)`() {
+
+        compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "class6.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.iossuspendwrapper.ToNativeClass
+                            import kotlinx.coroutines.flow.Flow
+
+                            @ToNativeClass(name="CustomIos")
+                            interface InterfaceGenerationExample {
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.CustomIos",
+            tempDir = tempDir
+        )
+    }
+
 }
