@@ -20,8 +20,7 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeMirror
-import javax.tools.Diagnostic
-import javax.tools.Diagnostic.Kind.*
+import javax.tools.Diagnostic.Kind.ERROR
 
 
 const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
@@ -220,9 +219,6 @@ class Processor : AbstractProcessor() {
         allGeneratedInterfaces: Map<TypeName, GeneratedSuperInterface>
     ): Pair<TypeName, GeneratedSuperInterface>? = mutableSetOf<TypeName>()
         .apply {
-            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "A: $className \n")
-            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "B: $superInterfacesOfClass \n")
-            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "C: $allGeneratedInterfaces \n")
             addAll(superInterfacesOfClass)
             add(className)
         }
