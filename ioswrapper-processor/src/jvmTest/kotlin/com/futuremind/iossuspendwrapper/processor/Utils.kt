@@ -50,3 +50,9 @@ fun prepareCompilation(
         sources = sourceFiles
         verbose = false
     }
+
+fun KClass<*>.methodReturnType(methodName: String) =
+    members.find { it.name == methodName }!!.returnType.toString()
+
+const val defaultClassNameSuffix = "Native"
+const val defaultInterfaceNameSuffix = "NativeProtocol"

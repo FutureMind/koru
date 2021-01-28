@@ -33,19 +33,13 @@ class FunctionReturnTypeConversionTest {
                             }
                         """
             ),
-            generatedClassCanonicalName = "com.futuremind.kmm101.test.SuspendExampleNative",
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.SuspendExample$defaultClassNameSuffix",
             tempDir = tempDir
         )
 
-        with(generatedClass.members.find { it.name == "doSth" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Unit>"
-        }
-        with(generatedClass.members.find { it.name == "returnSthSimple" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Float>"
-        }
-        with(generatedClass.members.find { it.name == "returnSthComplex" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
-        }
+        generatedClass.methodReturnType("doSth") shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Unit>"
+        generatedClass.methodReturnType("returnSthSimple") shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.Float>"
+        generatedClass.methodReturnType("returnSthComplex") shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
     @Test
@@ -69,19 +63,13 @@ class FunctionReturnTypeConversionTest {
                 }
             """
             ),
-            generatedClassCanonicalName = "com.futuremind.kmm101.test.BlockingExampleNative",
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.BlockingExample$defaultClassNameSuffix",
             tempDir = tempDir
         )
 
-        with(generatedClass.members.find { it.name == "doSth" }!!) {
-            returnType.toString() shouldBe "kotlin.Unit"
-        }
-        with(generatedClass.members.find { it.name == "returnSthSimple" }!!) {
-            returnType.toString() shouldBe "kotlin.Float"
-        }
-        with(generatedClass.members.find { it.name == "returnSthComplex" }!!) {
-            returnType.toString() shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
-        }
+        generatedClass.methodReturnType("doSth") shouldBe "kotlin.Unit"
+        generatedClass.methodReturnType("returnSthSimple") shouldBe "kotlin.Float"
+        generatedClass.methodReturnType("returnSthComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
     }
 
     @Test
@@ -106,19 +94,13 @@ class FunctionReturnTypeConversionTest {
                 }
             """
             ),
-            generatedClassCanonicalName = "com.futuremind.kmm101.test.FlowExampleNative",
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.FlowExample$defaultClassNameSuffix",
             tempDir = tempDir
         )
 
-        with(generatedClass.members.find { it.name == "doSth" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.Unit>"
-        }
-        with(generatedClass.members.find { it.name == "returnSthSimple" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.Float>"
-        }
-        with(generatedClass.members.find { it.name == "returnSthComplex" }!!) {
-            returnType.toString() shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
-        }
+        generatedClass.methodReturnType("doSth") shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.Unit>"
+        generatedClass.methodReturnType("returnSthSimple") shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.Float>"
+        generatedClass.methodReturnType("returnSthComplex") shouldBe "com.futuremind.iossuspendwrapper.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
 
