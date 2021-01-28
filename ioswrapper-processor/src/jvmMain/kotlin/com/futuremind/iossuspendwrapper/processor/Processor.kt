@@ -1,9 +1,6 @@
 package com.futuremind.iossuspendwrapper.processor
 
-import com.futuremind.iossuspendwrapper.ExportedScopeProvider
-import com.futuremind.iossuspendwrapper.ScopeProvider
-import com.futuremind.iossuspendwrapper.ToNativeClass
-import com.futuremind.iossuspendwrapper.ToNativeInterface
+import com.futuremind.iossuspendwrapper.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
@@ -204,6 +201,12 @@ class Processor : AbstractProcessor() {
         } catch (e: MirroredTypeException) {
             typeMirror = e.typeMirror
         }
+        if (typeMirror != null
+            && typeMirror.toString() != "com.futuremind.iossuspendwrapper.NoScopeProvider"
+            && scopeProviders[typeMirror.asTypeName()] == null
+        ) {
+            throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
+        }
         return scopeProviders[typeMirror?.asTypeName()]
     }
 
@@ -220,7 +223,7 @@ class Processor : AbstractProcessor() {
 
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
-            throw IllegalArgumentException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
+            throw IllegalStateException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
         }
     }
 

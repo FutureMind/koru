@@ -56,5 +56,10 @@ fun KClass<*>.method(methodName: String) =
 
 fun KClass<*>.methodReturnType(methodName: String) = method(methodName).returnType.toString()
 
+fun Collection<File>.getContentByFilename(filename: String) = this
+    .find { it.name == filename }!!
+    .readText()
+    .trim()
+
 const val defaultClassNameSuffix = "Native"
 const val defaultInterfaceNameSuffix = "NativeProtocol"
