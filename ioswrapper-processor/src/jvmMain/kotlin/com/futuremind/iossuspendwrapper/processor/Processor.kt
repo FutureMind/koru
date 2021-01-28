@@ -155,16 +155,6 @@ class Processor : AbstractProcessor() {
         val generatedClassName =
             annotation.name.nonEmptyOr("${originalTypeName.simpleName}Native")
 
-//        val interfaceFromClass: GeneratedSuperInterface? = generateInterfaceFromClass(
-//            shouldGenerate = annotation.generateInterface,
-//            generatedInterfaceName = annotation
-//                .generatedInterfaceName
-//                .nonEmptyOr("${generatedClassName}Protocol"),
-//            originalClassTypeSpec = typeSpec,
-//            originalClassName = originalClassName,
-//            kaptGeneratedDir = kaptGeneratedDir
-//        )
-
         val originalToGeneratedInterfaceName: Pair<TypeName, GeneratedSuperInterface>? =
             matchGeneratedInterfaceName(
                 superInterfacesOfClass = typeSpec.superinterfaces.keys,
@@ -186,32 +176,6 @@ class Processor : AbstractProcessor() {
             .writeTo(File(kaptGeneratedDir))
 
     }
-
-//    private fun generateInterfaceFromClass(
-//        shouldGenerate: Boolean,
-//        generatedInterfaceName: String,
-//        originalClassTypeSpec: TypeSpec,
-//        originalClassName: ClassName,
-//        kaptGeneratedDir: String
-//    ): GeneratedSuperInterface? {
-//
-//        if (!shouldGenerate) return null
-//
-//        val generatedType = WrapperInterfaceBuilder(
-//            newTypeName = generatedInterfaceName,
-//            poetMetadataSpec = originalClassTypeSpec
-//        ).build()
-//
-//        FileSpec.builder(originalClassName.packageName, generatedInterfaceName)
-//            .addType(generatedType)
-//            .build()
-//            .writeTo(File(kaptGeneratedDir))
-//
-//        return GeneratedSuperInterface(
-//            ClassName(originalClassName.packageName, generatedInterfaceName),
-//            generatedType
-//        )
-//    }
 
     private fun matchGeneratedInterfaceName(
         superInterfacesOfClass: Set<TypeName>,
@@ -263,7 +227,3 @@ class Processor : AbstractProcessor() {
 }
 
 data class GeneratedSuperInterface(val name: TypeName, val typeSpec: TypeSpec)
-
-data class OriginalToGeneratedInterfaceName(val originalName: TypeName, val generatedName: TypeName)
-typealias OriginalInterfaceName = ClassName
-typealias GeneratedInterfaceName = ClassName

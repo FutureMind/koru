@@ -7,7 +7,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 
-class WrapperGenerationTest {
+class FunctionReturnTypeConversionTest {
 
     @TempDir
     lateinit var tempDir: File

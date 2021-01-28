@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class ScopeProviderGenerationTests {
+class ScopeProviderGenerationTest {
 
     @TempDir
     lateinit var tempDir: File
