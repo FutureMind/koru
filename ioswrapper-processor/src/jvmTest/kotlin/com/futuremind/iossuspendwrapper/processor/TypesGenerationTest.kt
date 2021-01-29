@@ -278,7 +278,7 @@ class TypesGenerationTest {
         )
     }
 
-    //TODO vals in interfaces are not handled properly yet
+    //TODO consider vals handling as well
     @Test
     fun `should properly copy all superinterfaces unrelated to our wrappers`() {
 

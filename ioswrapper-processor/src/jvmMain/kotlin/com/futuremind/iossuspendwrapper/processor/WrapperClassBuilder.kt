@@ -35,7 +35,7 @@ class WrapperClassBuilder(
                 .addReturnStatement(originalFuncSpec.returnType)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
-                    modifiers.remove(KModifier.ABSTRACT) //TODO only remove if original has been an interface
+                    modifiers.remove(KModifier.ABSTRACT) //when we create class, we always wrap into a concrete impl
                     addMissingOverrideModifier(originalFuncSpec)
                 }
                 .build()
