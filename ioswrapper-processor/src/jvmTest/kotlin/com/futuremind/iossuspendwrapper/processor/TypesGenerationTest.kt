@@ -278,4 +278,45 @@ class TypesGenerationTest {
         )
     }
 
+    //TODO vals in interfaces are not handled properly yet
+    @Test
+    fun `should properly copy all superinterfaces unrelated to our wrappers`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "class5.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.iossuspendwrapper.ToNativeClass
+                            import com.futuremind.iossuspendwrapper.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+
+                            interface UnrelatedInterface {
+                                fun doWhatever() : String
+                            }
+                            
+                            @ToNativeInterface
+                            interface RelatedInterface {
+                                suspend fun doWhateverSuspending() : String
+                            }
+                            
+                            @ToNativeClass
+                            class SuperInterfacesExample : UnrelatedInterface, RelatedInterface {
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                                override fun doWhatever(): String = TODO()
+                                override suspend fun doWhateverSuspending(): String = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.methodReturnType("doWhatever") shouldBe "kotlin.String"
+        generatedType.methodReturnType("doWhateverSuspending") shouldBe "com.futuremind.iossuspendwrapper.SuspendWrapper<kotlin.String>"
+    }
+
 }
