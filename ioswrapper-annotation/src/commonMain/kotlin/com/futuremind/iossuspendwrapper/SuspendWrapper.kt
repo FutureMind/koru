@@ -19,7 +19,7 @@ class SuspendWrapper<T>(
         onThrow: (error: Throwable) -> Unit
     ) = subscribe(
         scope = scopeProvider?.scope
-            ?: throw IllegalArgumentException("To use implicit scope, you have to provide it via @WrapForIos.launchOnScope and @ExportedScopeProvider."),
+            ?: throw IllegalArgumentException("To use implicit scope, you have to provide it via @ToNativeClass.launchOnScope and @ExportedScopeProvider."),
         onSuccess = onSuccess,
         onThrow = onThrow
     )

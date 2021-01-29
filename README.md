@@ -4,14 +4,14 @@ Automatically generates wrappers for `suspend` functions and `Flow` for easy acc
 
 Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
-**Note**: this is an **early preview**. Both the library api and maven coordinates are very likely to change.
+**Note**: this is an **early preview**. Both the library api and maven coordinates are likely to change.
 
-## Basic sample
+## Basic example
 
 Let's say you have a class in the `shared` module, that looks like this:
 
 ```kotlin
-@WrapForIos
+@ToNativeClass(name = "LoadUserUseCaseIos")
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
@@ -19,9 +19,9 @@ class LoadUserUseCase(private val service: Service) {
 }
 ```
 
-Such use case can be easily consumed from Android code, but in Kotlin Native (iOS) suspend functions generate a completion handler which is a bit of a PITA to work with.
+Such use case can be easily consumed from Android code, but in Kotlin Native (e.g. iOS) suspend functions generate a completion handler which is a bit of a PITA to work with.
 
-When you add `@WrapForIos` annotation to the class, a wrapper is generated:
+When you add `@ToNativeClass` annotation to the class, a wrapper is generated:
 
 ```kotlin
 public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
@@ -35,7 +35,7 @@ public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
 Notice that in place of `suspend` function, we get a function exposing `SuspendWrapper`. When you expose `LoadUserUseCaseIos` to your Swift code, it can be consumed like this:
 
 ```swift
-loadUserUseCaseIos.loadUser(username: "some username").subscribe(
+loadUserUseCaseIos.loadUser(username: "foo").subscribe(
             scope: coroutineScope, //this can be provided automatically, more on that below
             onSuccess: { user in print(user?.description() ?? "none") },
             onThrow: { error in print(error.description())}
@@ -44,11 +44,9 @@ loadUserUseCaseIos.loadUser(username: "some username").subscribe(
 
 From here it can be easily wrapped into RxSwift `Single<User?>` or Combine `AnyPublisher<User?, Error>`.
 
-## More options
+## Generated functions - Suspend, Flow and regular
 
-### Suspend, Flow and blocking function
-
-The wrappers handle original function signatures in three ways:
+The wrappers generate different return types based on the original function signature
 
 | Original | Wrapper |
 |-|-|
@@ -59,7 +57,7 @@ The wrappers handle original function signatures in three ways:
 So, for example, this class:
 
 ```kotlin
-@WrapForIos
+@ToNativeClass(name = LoadUserUseCaseIos)
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
@@ -86,52 +84,17 @@ public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
 }
 ```
 
-### Generate interfaces
-
-If you write tests in your Swift code, you probably need protocols for your classes to use them as fakes in tests. In KMM protocols are derived from kotlin interfaces. Generated wrapper classes need their own interfaces and you've got two options to create them.
-
-#### Generate interface from class
-
-The easiest way is to just generate them automagically.
-
-```kotlin
-@WrapForIos(generateInterface = true)
-class LoadUserUseCase(private val service: Service) {
-
-    suspend fun loadUser(username: String) = service.loadUser(username)
-    
-}
-```
-
-This will create both the wrapper class `LoadUserUseCaseIos` and a corresponding interface `LoadUserUseCaseIosProtocol`.
-
-#### Generate interface from interface
-
-Or if you already have an interface, you can also `@WrapForIos` so that appropriate signatures are created for iOS protocols.
-
-```kotlin
-@WrapForIos
-interface LoadUserUseCase {
-
-    suspend fun loadUser(username: String): User?
-    
-}
-
-@WrapForIos
-class LoadUserUseCaseImpl(private val service: Service) : LoadUserUseCase {
-
-    override suspend fun loadUser(username: String) = service.loadUser(username)
-    
-}
-```
-
-This will create the wrapper class `LoadUserUseCaseImplIos` and a corresponding interface `LoadUserUseCaseIos`.
-
-**Note**: the annotation for the interface will change in future versions.
+## More options
 
 ### Customizing generated names
 
-*`To be documented`, but generally you can use `@WrapForIos(className = "MyOwnIosClassName")` and `@WrapForIos(generatedInterfaceName = "MyOwnIosProtocolName")`*
+You can control the name of the generated class or interface:
+- `@ToNativeClass(name = "MyFancyIosClass")`
+- `@ToNativeInterface(name = "MyFancyIosProtocol")`
+
+You can also omit the `name` parameter and use the defaults:
+- `@ToNativeClass Foo` becomes `FooNative`
+- `@ToNativeInterface Foo` becomes `FooNativeProtocol`
 
 ### Provide the scope automatically
 
@@ -151,10 +114,10 @@ class MainScopeProvider : ScopeProvider {
 And then you provide the scope like this
 
 ```kotlin
-@WrapForIos(launchOnScope = MainScopeProvider::class)
+@ToNativeClass(launchOnScope = MainScopeProvider::class)
 ```
 
-Under the hood it generates a top level `MainScopeProvider` property which is then injected into the `SuspendWrapper`s and `FlowWrapper`s. Thanks to this, your iOS code can be simplified to just the callbacks, scope that launches coroutines is handled implicitly:
+Thanks to this, your Swift code can be simplified to just the callbacks, scope that launches coroutines is handled implicitly.
 
 ```swift
 loadUserUseCaseIos.loadUser(username: "some username").subscribe(
@@ -163,6 +126,78 @@ loadUserUseCaseIos.loadUser(username: "some username").subscribe(
         )
 ```
 
+<details>
+  <summary>What happens under the hood?</summary>
+    
+  Under the hood, a top level property `val exportedScopeProvider_mainScopeProvider = MainScopeProvider()` is created. Then, it is injected into the `SuspendWrapper`s and `FlowWrapper`s as the default scope that `launch`es the coroutines. Remember, that you can always provide custom scope if you need to.
+  
+  ```kotlin
+  fun flow(foo: String) = FlowWrapper(exportedScopeProvider_mainScopeProvider, wrapped.flow(foo))
+  fun suspending(foo: String) = SuspendWrapper(exportedScopeProvider_mainScopeProvider) { wrapped.suspending(foo) }
+  ```
+
+</details>
+
+### Generate interfaces from classes and classes from interfaces
+
+Usually you will just need to use `@ToNativeClass` on your business logic class like in the basic example. However, you can get more fancy, if you want. 
+
+#### Generate interface from class
+
+Say, you want to expose to Swift code both the class and an interface (which translates to protocol in Swift), so that you can use the protocol to create a fake impl for unit tests.
+
+```kotlin
+@ToNativeClass(name = "FooIos")
+@ToNativeInterface(name = "FooIosProtocol")
+class Foo
+```
+
+This code will create an interface and a class extending it.
+
+```kotlin
+interface FooIosProtocol
+
+class FooIos(private val wrapped: Foo) : FooIosProtocol
+```
+
+#### Generate interface from interface
+
+If you already have an interface, you can reuse it just as easily:
+
+```kotlin
+@ToNativeInterface(name = "FooIosProtocol")
+interface IFoo
+
+@ToNativeClass(name = "FooIos")
+class Foo : IFoo
+```
+
+This will also create an interface and a class and automatically match them:
+
+```kotlin
+interface FooIosProtocol
+
+class FooIos(private val wrapped: Foo) : FooIosProtocol
+```
+
+#### Generate class from interface
+
+*Not sure what the use case might be, nevertheless, it's also possible"
+
+```kotlin
+@ToNativeClass(name = "FooIos")
+interface Foo
+```
+
+Will generate:
+
+```kotlin
+class FooIos(private val wrapped: Foo)
+```
+
+## Handling from Swift side
+
+**TBD** (Working on an article and some sample repo and some simple Combine / RxSwift wrappers that can be copied to your project).
 
 ## Download
 
@@ -195,10 +230,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:ioswrapper-annotation:0.1.2")
+                implementation("com.futuremind:ioswrapper-annotation:0.2.0")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "ioswrapper-processor", "0.1.2"
+                        "com.futuremind", "ioswrapper-processor", "0.2.0"
                     )
                 )
 

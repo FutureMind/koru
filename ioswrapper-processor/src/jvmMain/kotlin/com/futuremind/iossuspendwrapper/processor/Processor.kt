@@ -1,8 +1,6 @@
 package com.futuremind.iossuspendwrapper.processor
 
-import com.futuremind.iossuspendwrapper.ExportedScopeProvider
-import com.futuremind.iossuspendwrapper.ScopeProvider
-import com.futuremind.iossuspendwrapper.WrapForIos
+import com.futuremind.iossuspendwrapper.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
@@ -19,7 +17,7 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeMirror
-import javax.tools.Diagnostic.Kind.*
+import javax.tools.Diagnostic.Kind.ERROR
 
 
 const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
@@ -28,7 +26,8 @@ const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
 class Processor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes() = mutableSetOf(
-        WrapForIos::class.java.canonicalName,
+        ToNativeClass::class.java.canonicalName,
+        ToNativeInterface::class.java.canonicalName,
         ExportedScopeProvider::class.java.canonicalName
     )
 
@@ -57,12 +56,9 @@ class Processor : AbstractProcessor() {
             }
             .toMap()
 
-        val annotatedElements = roundEnv.getElementsAnnotatedWith(WrapForIos::class.java)
-
-        val generatedInterfacesFromAnnotatedInterfaces = annotatedElements
-            .filter { it.kind.isInterface }
+        val generatedInterfaces = roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
             .map { element ->
-                generateInterfaceFromInterface(
+                generateInterface(
                     element = element,
                     classInspector = classInspector,
                     targetDir = kaptGeneratedDir
@@ -70,13 +66,12 @@ class Processor : AbstractProcessor() {
             }
             .toMap()
 
-        annotatedElements
-            .filter { it.kind.isClass }
+        roundEnv.getElementsAnnotatedWith(ToNativeClass::class.java)
             .forEach { element ->
                 generateWrappedClasses(
                     element = element,
                     classInspector = classInspector,
-                    generatedInterfacesNames = generatedInterfacesFromAnnotatedInterfaces,
+                    generatedInterfaces = generatedInterfaces,
                     scopeProviders = scopeProviders,
                     kaptGeneratedDir = kaptGeneratedDir
                 )
@@ -117,27 +112,27 @@ class Processor : AbstractProcessor() {
     }
 
     @KotlinPoetMetadataPreview
-    private fun generateInterfaceFromInterface(
+    private fun generateInterface(
         element: Element,
         classInspector: ClassInspector,
         targetDir: String
-    ): Pair<OriginalInterfaceName, GeneratedInterfaceName> {
+    ): Pair<TypeName, GeneratedInterface> {
 
-        val interfaceName = element.getClassName(processingEnv)
+        val typeName = element.getClassName(processingEnv)
         val typeSpec = (element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector)
-        val annotation = element.getAnnotation(WrapForIos::class.java)
-        val newTypeName = annotation.className.nonEmptyOr("${interfaceName.simpleName}Ios")
+        val annotation = element.getAnnotation(ToNativeInterface::class.java)
+        val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
 
         val generatedType = WrapperInterfaceBuilder(newTypeName, typeSpec).build()
 
-        FileSpec.builder(interfaceName.packageName, newTypeName)
+        FileSpec.builder(typeName.packageName, newTypeName)
             .addType(generatedType)
             .build()
             .writeTo(File(targetDir))
 
-        val newInterfaceName = ClassName(interfaceName.packageName, newTypeName)
+        val newInterfaceName = ClassName(typeName.packageName, newTypeName)
 
-        return interfaceName to newInterfaceName
+        return typeName to GeneratedInterface(newInterfaceName, generatedType)
 
     }
 
@@ -145,87 +140,56 @@ class Processor : AbstractProcessor() {
     private fun generateWrappedClasses(
         element: Element,
         classInspector: ClassInspector,
-        generatedInterfacesNames: Map<OriginalInterfaceName, GeneratedInterfaceName>,
+        generatedInterfaces: Map<TypeName, GeneratedInterface>,
         scopeProviders: Map<ClassName, PropertySpec>,
         kaptGeneratedDir: String
     ) {
 
-        val originalClassName = element.getClassName(processingEnv)
+        val originalTypeName = element.getClassName(processingEnv)
         val typeSpec = (element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector)
-        val annotation = element.getAnnotation(WrapForIos::class.java)
+        val annotation = element.getAnnotation(ToNativeClass::class.java)
 
         val generatedClassName =
-            annotation.className.nonEmptyOr("${originalClassName.simpleName}Ios")
+            annotation.name.nonEmptyOr("${originalTypeName.simpleName}Native")
 
-        val interfaceFromClass: GeneratedSuperInterface? = generateInterfaceFromClass(
-            shouldGenerate = annotation.generateInterface,
-            generatedInterfaceName = annotation
-                .generatedInterfaceName
-                .nonEmptyOr("${generatedClassName}Protocol"),
-            originalClassTypeSpec = typeSpec,
-            originalClassName = originalClassName,
-            kaptGeneratedDir = kaptGeneratedDir
-        )
-
-        val originalToGeneratedInterfaceName: OriginalToGeneratedInterfaceName? = typeSpec
-            .superinterfaces.keys
-            .matchGeneratedInterfaceName(generatedInterfacesNames)
+        val originalToGeneratedInterface: OriginalToGeneratedInterface? =
+            matchGeneratedInterfaceName(
+                superInterfacesOfClass = typeSpec.superinterfaces.keys,
+                className = originalTypeName,
+                allGeneratedInterfaces = generatedInterfaces
+            )
 
         val classToGenerateSpec = WrapperClassBuilder(
-            wrappedClassName = originalClassName,
-            poetMetadataSpec = typeSpec,
+            originalTypeName = originalTypeName,
+            originalTypeSpec = typeSpec,
             newTypeName = generatedClassName,
-            interfaceGeneratedFromClass = interfaceFromClass,
-            wrapperGeneratedInterface = originalToGeneratedInterfaceName,
+            originalToGeneratedInterface = originalToGeneratedInterface,
             scopeProviderSpec = obtainScopeProviderSpec(annotation, scopeProviders)
         ).build()
 
-        FileSpec.builder(originalClassName.packageName, generatedClassName)
+        FileSpec.builder(originalTypeName.packageName, generatedClassName)
             .addType(classToGenerateSpec)
             .build()
             .writeTo(File(kaptGeneratedDir))
 
     }
 
-    private fun generateInterfaceFromClass(
-        shouldGenerate: Boolean,
-        generatedInterfaceName: String,
-        originalClassTypeSpec: TypeSpec,
-        originalClassName: ClassName,
-        kaptGeneratedDir: String
-    ): GeneratedSuperInterface? {
-
-        if (!shouldGenerate) return null
-
-        val generatedType = WrapperInterfaceBuilder(
-            newTypeName = generatedInterfaceName,
-            poetMetadataSpec = originalClassTypeSpec
-        ).build()
-
-        FileSpec.builder(originalClassName.packageName, generatedInterfaceName)
-            .addType(generatedType)
-            .build()
-            .writeTo(File(kaptGeneratedDir))
-
-        return GeneratedSuperInterface(
-            ClassName(originalClassName.packageName, generatedInterfaceName),
-            generatedType
-        )
-    }
-
-    private fun Set<TypeName>.matchGeneratedInterfaceName(
-        allGeneratedInterfaces: Map<OriginalInterfaceName, GeneratedInterfaceName>
-    ): OriginalToGeneratedInterfaceName? = this
+    private fun matchGeneratedInterfaceName(
+        superInterfacesOfClass: Set<TypeName>,
+        className: TypeName,
+        allGeneratedInterfaces: Map<TypeName, GeneratedInterface>
+    ): OriginalToGeneratedInterface? = mutableSetOf<TypeName>()
+        .apply {
+            addAll(superInterfacesOfClass)
+            add(className)
+        }
         .find { allGeneratedInterfaces[it] != null }
         ?.let { originalName ->
-            OriginalToGeneratedInterfaceName(
-                originalName = originalName,
-                generatedName = allGeneratedInterfaces[originalName]!!
-            )
+            OriginalToGeneratedInterface(originalName, allGeneratedInterfaces[originalName]!!)
         }
 
     private fun obtainScopeProviderSpec(
-        annotation: WrapForIos,
+        annotation: ToNativeClass,
         scopeProviders: Map<ClassName, PropertySpec>
     ): PropertySpec? {
         //this is the dirtiest hack ever but it works :O
@@ -236,6 +200,12 @@ class Processor : AbstractProcessor() {
             annotation.launchOnScope
         } catch (e: MirroredTypeException) {
             typeMirror = e.typeMirror
+        }
+        if (typeMirror != null
+            && typeMirror.toString() != "com.futuremind.iossuspendwrapper.NoScopeProvider" //TODO do not compare strings but types
+            && scopeProviders[typeMirror.asTypeName()] == null
+        ) {
+            throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
         }
         return scopeProviders[typeMirror?.asTypeName()]
     }
@@ -253,14 +223,11 @@ class Processor : AbstractProcessor() {
 
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
-            throw IllegalArgumentException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
+            throw IllegalStateException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
         }
     }
 
 }
 
-data class GeneratedSuperInterface(val name: TypeName, val typeSpec: TypeSpec)
-
-data class OriginalToGeneratedInterfaceName(val originalName: TypeName, val generatedName: TypeName)
-typealias OriginalInterfaceName = ClassName
-typealias GeneratedInterfaceName = ClassName
+data class GeneratedInterface(val name: TypeName, val typeSpec: TypeSpec)
+data class OriginalToGeneratedInterface(val originalName: TypeName, val generated: GeneratedInterface)
