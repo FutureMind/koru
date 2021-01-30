@@ -58,7 +58,7 @@ publishing {
     repositories {
         maven {
             name = "bintray"
-            setUrl("https://api.bintray.com/content/mklimczak/kmm-ios-suspendwrapper/ioswrapper-processor/$version/;publish=1;override=0")
+            setUrl("https://api.bintray.com/content/futuremind/koru/koru-processor/$version/;publish=1;override=0")
             credentials {
                 //TODO get from env vars in CI process
                 val properties = Properties()
