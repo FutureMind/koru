@@ -55,6 +55,27 @@ publishing {
         group = rootProject.group
     }
 
+    publications.withType<MavenPublication> {
+        pom {
+            name.set("Koru - Processor")
+            description.set("Wrappers for suspend functions / Flow in Kotlin Native - annotation processor.")
+            url.set("https://github.com/FutureMind/koru")
+            licenses {
+                license {
+                    name.set("The MIT License")
+                    url.set("https://opensource.org/licenses/MIT")
+                }
+            }
+            developers {
+                developer {
+                    id.set("mklimczak")
+                    name.set("Michał Klimczak")
+                    email.set("m.klimczak@futuremind.com")
+                }
+            }
+        }
+    }
+
     repositories {
         maven {
             name = "bintray"
