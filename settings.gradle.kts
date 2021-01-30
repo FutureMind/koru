@@ -8,8 +8,8 @@ pluginManagement {
         maven("https://plugins.gradle.org/m2/")
     }
 }
-rootProject.name = "KMM Suspend Wrapper"
+rootProject.name = "Koru"
 
-include(":ioswrapper-annotation")
-include(":ioswrapper-processor")
+include(":koru")
+include(":koru-processor")
 

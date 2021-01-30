@@ -1,4 +1,4 @@
-# SuspendWrapper
+# Koru
 
 Automatically generates wrappers for `suspend` functions and `Flow` for easy access from Swift code in Kotlin Multiplatform projects.
 
