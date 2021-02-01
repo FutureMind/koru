@@ -230,10 +230,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:ioswrapper-annotation:0.3.2")
+                implementation("com.futuremind:koru:0.3.2")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "ioswrapper-processor", "0.3.2"
+                        "com.futuremind", "koru-processor", "0.3.2"
                     )
                 )
 
