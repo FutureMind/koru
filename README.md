@@ -4,7 +4,7 @@ Automatically generates wrappers for `suspend` functions and `Flow` for easy acc
 
 Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
-**Note**: this is an **early preview**. Both the library api and maven coordinates are likely to change.
+**Note**: this library is in alpha state. The API may change and jcenter should be added soon.
 
 ## Basic example
 
@@ -205,7 +205,7 @@ Add the maven repository to the root `build.gradle.kts` (we will publish to jcen
 ```kotlin
 allprojects {
     repositories {
-        maven(url = "https://dl.bintray.com/mklimczak/kmm-ios-suspendwrapper")
+        maven(url = "https://dl.bintray.com/futuremind/koru")
     }
 }
 ```
@@ -230,10 +230,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:ioswrapper-annotation:0.2.0")
+                implementation("com.futuremind:ioswrapper-annotation:0.3.2")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "ioswrapper-processor", "0.2.0"
+                        "com.futuremind", "ioswrapper-processor", "0.3.2"
                     )
                 )
 
