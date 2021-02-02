@@ -6,7 +6,11 @@ Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
 **Note**: this library is in alpha state. The API may change and jcenter should be added soon.
 
-## Basic example
+## Getting started
+
+To get started, consult the Basic example below, read [introductory article](https://medium.com/futuremind/handling-kotlin-multiplatform-coroutines-in-swift-koru-4a80b93f232b) or check out the [example repo](https://github.com/FutureMind/koru-example).
+
+### Basic example
 
 Let's say you have a class in the `shared` module, that looks like this:
 
@@ -195,9 +199,22 @@ Will generate:
 class FooIos(private val wrapped: Foo)
 ```
 
-## Handling from Swift side
+## Handling in Swift code
 
-**TBD** (Working on an article and some sample repo and some simple Combine / RxSwift wrappers that can be copied to your project).
+You can consume the coroutine wrappers directly as callbacks. But if you are working with Swift Combine, you can wrap those callbacks using [simple global functions](https://github.com/FutureMind/koru-example/blob/master/iosApp/iosApp/Utils/Coroutine2Combine.swift) (extension functions are not supported for Kotlin Native generic types at this time).
+
+Then, you can call them like this:
+
+```swift
+createPublisher(wrapper: loadUserUseCase.loadUser(username: "noone special"))
+    .sink(
+        receiveCompletion: { completion in print("Completion: \(completion)") },
+        receiveValue: { user in print("Hello from the Kotlin side \(user?.name)") }
+    )
+    .store(in: &cancellables)
+```
+
+Similar helper functions can be easily created for RxSwift.
 
 ## Download
 
