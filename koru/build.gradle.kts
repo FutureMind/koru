@@ -85,28 +85,37 @@ publishing {
 }
 
 // Create javadocs and attach to maven publication (required by mavenCentral)
-//tasks {
-//    dokkaJavadoc {
-//        outputDirectory.set(project.rootProject.file("$buildDir/dokka"))
-//        dokkaSourceSets {
-//            named("commonMain") {
-//                sourceRoots.from(kotlin.sourceSets.getByName("commonMain").kotlin.srcDirs)
-//            }
-//        }
-//    }
-//}
+tasks {
+    dokkaJavadoc {
+        outputDirectory.set(project.rootProject.file("$buildDir/dokka"))
+        dokkaSourceSets {
+            configureEach {
+                suppress.set(true)
+            }
+            val commonMain by getting {
+                suppress.set(false)
+                platform.set(org.jetbrains.dokka.Platform.jvm)
+            }
+        }
+    }
+}
+val javadocJar by tasks.creating(Jar::class) {
+    val dokkaTask = tasks.getByName<org.jetbrains.dokka.gradle.DokkaTask>("dokkaJavadoc")
+    from(dokkaTask.outputDirectory)
+    dependsOn(dokkaTask)
+    dependsOn("build")
+    archiveClassifier.value("javadoc")
+}
+
 //val javadocJar by tasks.creating(Jar::class) {
-//    val dokkaTask = tasks.getByName<org.jetbrains.dokka.gradle.DokkaTask>("dokkaJavadoc")
-//    from(dokkaTask.outputDirectory)
-//    dependsOn(dokkaTask)
-//    dependsOn("build")
 //    archiveClassifier.value("javadoc")
+//    // TODO: use dokka eventually - right now there are some issues with multiplatform projects
 //}
-//publishing {
-//    publications.withType<MavenPublication>().all {
-//        artifact(javadocJar)
-//    }
-//}
+publishing {
+    publications.withType<MavenPublication>().all {
+        artifact(javadocJar)
+    }
+}
 
 //sign all artifacts
 publishing {
