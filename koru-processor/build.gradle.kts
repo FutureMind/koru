@@ -14,7 +14,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url="https://dl.bintray.com/kotlin/dokka") //TODO 1.4.20 not in mavenCentral yet
+    maven(url = "https://dl.bintray.com/kotlin/dokka") //TODO 1.4.20 not in mavenCentral yet
     jcenter()
     /*
     com.soywiz.korlibs.korte:korte-jvm:1.10.3
@@ -144,11 +144,7 @@ publishing {
 //sign all artifacts
 publishing {
     publications.withType<MavenPublication>().all {
-        signing{
-            useInMemoryPgpKeys(
-                stringFromProperties("signing.keyId"),
-                stringFromProperties("signing.password")
-            )
+        signing {
             sign(this@all)
         }
     }

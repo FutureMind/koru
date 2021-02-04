@@ -4,6 +4,7 @@ plugins {
     kotlin("multiplatform")
     id("java-library")
     id("maven-publish")
+    id("signing")
     id("org.jetbrains.dokka") version "1.4.20"
 }
 
@@ -106,3 +107,12 @@ publishing {
 //        artifact(javadocJar)
 //    }
 //}
+
+//sign all artifacts
+publishing {
+    publications.withType<MavenPublication>().all {
+        signing {
+            sign(this@all)
+        }
+    }
+}
