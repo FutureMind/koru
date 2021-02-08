@@ -97,8 +97,8 @@ publishing {
                 }
             )
             credentials {
-                username = project.properties["sonatypeUsername"] as String
-                password = project.properties["sonatypePassword"] as String
+                username = project.properties["sonatypeUsername"] as String?
+                password = project.properties["sonatypePassword"] as String?
             }
         }
     }

@@ -17,4 +17,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Processor tests
-        run: bash ./gradlew :koru-processor:jvmTestClasses --stacktrace
+        run: bash ./gradlew :koru-processor:jvmTest --stacktrace
