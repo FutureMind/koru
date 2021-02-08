@@ -1,10 +1,12 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.futuremind/koru/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.futuremind/koru)
+
 # Koru
 
 Automatically generates wrappers for `suspend` functions and `Flow` for easy access from Swift code in Kotlin Multiplatform projects.
 
 Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
-**Note**: this library is in alpha state. The API may change and jcenter should be added soon.
+**Note**: this library is in alpha state - the API may change.
 
 ## Getting started
 
@@ -218,16 +220,9 @@ Similar helper functions can be easily created for RxSwift.
 
 ## Download
 
-Add the maven repository to the root `build.gradle.kts` (we will publish to jcenter later).
-```kotlin
-allprojects {
-    repositories {
-        maven(url = "https://dl.bintray.com/futuremind/koru")
-    }
-}
-```
+The artifacts are available on Maven Central. 
 
-In the shared module `build.gradle.kts`
+To use the library in a KMM project, use this config in the `build.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -247,10 +242,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.3.2")
+                implementation("com.futuremind:koru:0.3.4")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.3.2"
+                        "com.futuremind", "koru-processor", "0.3.4"
                     )
                 )
 
