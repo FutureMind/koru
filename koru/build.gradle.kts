@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     kotlin("multiplatform")
     id("java-library")
@@ -75,8 +73,6 @@ publishing {
                 }
             )
             credentials {
-                val properties = Properties()
-                properties.load(project.rootProject.file("local.properties").inputStream())
                 username = project.properties["sonatypeUsername"] as String
                 password = project.properties["sonatypePassword"] as String
             }
