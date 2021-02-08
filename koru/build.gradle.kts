@@ -10,13 +10,13 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url="https://dl.bintray.com/kotlin/dokka") //TODO 1.4.20 not in mavenCentral yet
+
+    /* TODO Dokka 1.4.20 and its deps not in mavenCentral yet
+         com.soywiz.korlibs.korte:korte-jvm:1.10.3
+         org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2.
+            Required by: project :koru > org.jetbrains.dokka:javadoc-plugin:1.4.20
+    */
     jcenter()
-    /*
-    com.soywiz.korlibs.korte:korte-jvm:1.10.3
-    org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2.
-        Required by: project :koru > org.jetbrains.dokka:javadoc-plugin:1.4.20
-     */
 }
 
 kotlin {
