@@ -77,14 +77,14 @@ publishing {
             credentials {
                 val properties = Properties()
                 properties.load(project.rootProject.file("local.properties").inputStream())
-                username = properties["sonatypeUsername"] as String
-                password = properties["sonatypePassword"] as String
+                username = project.properties["sonatypeUsername"] as String
+                password = project.properties["sonatypePassword"] as String
             }
         }
     }
 }
 
-// Create javadocs and attach to maven publication (required by mavenCentral)
+// Create javadocs with dokka and attach to maven publication
 tasks {
     dokkaJavadoc {
         outputDirectory.set(project.rootProject.file("$buildDir/dokka"))
@@ -106,18 +106,19 @@ val javadocJar by tasks.creating(Jar::class) {
     dependsOn("build")
     archiveClassifier.value("javadoc")
 }
-
-//val javadocJar by tasks.creating(Jar::class) {
-//    archiveClassifier.value("javadoc")
-//    // TODO: use dokka eventually - right now there are some issues with multiplatform projects
-//}
 publishing {
     publications.withType<MavenPublication>().all {
         artifact(javadocJar)
     }
 }
 
-//sign all artifacts
+/*
+Sign all artifacts
+Requires following properties to be set in gradle.properties
+signing.keyId=
+signing.password=
+signing.secretKeyRingFile=
+ */
 publishing {
     publications.withType<MavenPublication>().all {
         signing {

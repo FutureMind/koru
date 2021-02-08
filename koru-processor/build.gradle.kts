@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     /*
         this could be a pure-jvm module, but there are some dependency issues
@@ -57,11 +55,6 @@ kotlin {
     }
 }
 
-val properties = Properties()
-properties.load(project.rootProject.file("local.properties").inputStream())
-
-fun stringFromProperties(key: String) = properties[key] as String
-
 publishing {
 
     publications.all {
@@ -104,8 +97,8 @@ publishing {
                 }
             )
             credentials {
-                username = stringFromProperties("sonatypeUsername")
-                password = stringFromProperties("sonatypePassword")
+                username = project.properties["sonatypeUsername"] as String
+                password = project.properties["sonatypePassword"] as String
             }
         }
     }
@@ -116,7 +109,7 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-// Create javadocs and attach to maven publication (required by mavenCentral)
+// Create javadocs and attach to maven publication
 tasks {
     dokkaJavadoc {
         outputDirectory.set(project.rootProject.file("$buildDir/dokka"))
@@ -135,13 +128,13 @@ publishing {
     }
 }
 
-// The root publication also needs a dummy sources JAR as it does not have one by default
-//val sourcesJar by tasks.creating(Jar::class) {
-//    archiveClassifier.value("sources")
-//}
-//publishing.publications.withType<MavenPublication>().getByName("kotlinMultiplatform").artifact(sourcesJar)
-
-//sign all artifacts
+/*
+Sign all artifacts
+Requires following properties to be set in gradle.properties
+signing.keyId=
+signing.password=
+signing.secretKeyRingFile=
+ */
 publishing {
     publications.withType<MavenPublication>().all {
         signing {
