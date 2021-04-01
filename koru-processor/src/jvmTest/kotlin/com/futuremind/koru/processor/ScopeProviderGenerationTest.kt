@@ -124,6 +124,62 @@ class ScopeProviderGenerationTest {
 
     }
 
+  @Test
+  fun `should import generated scope provider when different package`() {
+
+    val scopeProvider = SourceFile.kotlin(
+      "scopeProvider3.kt",
+      """
+                        package com.futuremind.kmm101.test.scope
+                        
+                        import com.futuremind.koru.ExportedScopeProvider
+                        import com.futuremind.koru.ScopeProvider
+                        import kotlinx.coroutines.MainScope
+                        
+                        @ExportedScopeProvider
+                        class MainScopeProvider : ScopeProvider {
+                            override val scope = MainScope()
+                        }
+                    """
+    )
+
+    val classToWrap = SourceFile.kotlin(
+      "wrapper.kt",
+      """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+                        import kotlinx.coroutines.flow.Flow
+                        import com.futuremind.kmm101.test.scope.MainScopeProvider
+                        
+                            @ToNativeClass(launchOnScope = MainScopeProvider::class)
+                            class ImplicitScopeExample {
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                    """
+    )
+
+    val compilationResult = prepareCompilation(
+      sourceFiles = listOf(scopeProvider, classToWrap),
+      tempDir = tempDir
+    ).compile()
+
+    compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+    val generatedScopeProvider = compilationResult.generatedFiles
+      .getContentByFilename("MainScopeProviderContainer.kt")
+
+    val generatedClass = compilationResult.generatedFiles
+      .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
+
+    generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
+    generatedClass shouldContain "import com.futuremind.kmm101.test.scope.exportedScopeProvider_mainScopeProvider"
+    generatedClass shouldContain "FlowWrapper(exportedScopeProvider_mainScopeProvider, wrapped.flow(whatever))"
+    generatedClass shouldContain "SuspendWrapper(exportedScopeProvider_mainScopeProvider) { wrapped.suspending(whatever) }"
+  }
+
     @Test
     fun `should throw if trying to use @ToNativeClass(launchOnScope) without exporting scope via @ExportedScopeProvider`() {
 

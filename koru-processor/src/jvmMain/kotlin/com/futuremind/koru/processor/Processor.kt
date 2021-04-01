@@ -164,7 +164,7 @@ class Processor : AbstractProcessor() {
             originalTypeSpec = typeSpec,
             newTypeName = generatedClassName,
             originalToGeneratedInterface = originalToGeneratedInterface,
-            scopeProviderSpec = obtainScopeProviderSpec(annotation, scopeProviders)
+            scopeProviderMemberName = obtainScopeProviderMemberName(annotation, scopeProviders)
         ).build()
 
         FileSpec.builder(originalTypeName.packageName, generatedClassName)
@@ -188,10 +188,10 @@ class Processor : AbstractProcessor() {
             OriginalToGeneratedInterface(originalName, allGeneratedInterfaces[originalName]!!)
         }
 
-    private fun obtainScopeProviderSpec(
+    private fun obtainScopeProviderMemberName(
         annotation: ToNativeClass,
         scopeProviders: Map<ClassName, PropertySpec>
-    ): PropertySpec? {
+    ): MemberName {
         //this is the dirtiest hack ever but it works :O
         //there probably is some way of doing this via kotlinpoet-metadata
         //https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
@@ -207,7 +207,10 @@ class Processor : AbstractProcessor() {
         ) {
             throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
         }
-        return scopeProviders[typeMirror?.asTypeName()]
+      return MemberName(
+          packageName = (typeMirror?.asTypeName() as ClassName).packageName,
+          simpleName = checkNotNull(scopeProviders[typeMirror.asTypeName()]).name
+      )
     }
 
     private fun String.nonEmptyOr(or: String) = when (this.isEmpty()) {

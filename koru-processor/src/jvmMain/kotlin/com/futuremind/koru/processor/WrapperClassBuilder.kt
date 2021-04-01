@@ -10,7 +10,7 @@ class WrapperClassBuilder(
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
     private val originalToGeneratedInterface: OriginalToGeneratedInterface?,
-    private val scopeProviderSpec: PropertySpec?
+    private val scopeProviderMemberName: MemberName
 ) {
 
     companion object {
@@ -74,14 +74,16 @@ class WrapperClassBuilder(
             }
         }
 
-    private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec) = when {
+    private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
         this.isSuspend -> this.addStatement(
-            "return %T(${scopeProviderSpec?.name}) { ${originalFunSpec.asInvocation()} }",
-            SuspendWrapper::class
+            "return %T(%M) { ${originalFunSpec.asInvocation()} }",
+            SuspendWrapper::class,
+            scopeProviderMemberName
         )
         originalFunSpec.returnType.isFlow -> this.addStatement(
-            "return %T(${scopeProviderSpec?.name}, ${originalFunSpec.asInvocation()})",
-            FlowWrapper::class
+            "return %T(%M, ${originalFunSpec.asInvocation()})",
+            FlowWrapper::class,
+            scopeProviderMemberName
         )
         else -> this.addStatement("return ${originalFunSpec.asInvocation()}")
     }
