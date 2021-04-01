@@ -10,7 +10,7 @@ class WrapperClassBuilder(
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
     private val originalToGeneratedInterface: OriginalToGeneratedInterface?,
-    private val scopeProviderMemberName: MemberName
+    private val scopeProviderMemberName: MemberName?
 ) {
 
     companion object {
@@ -75,16 +75,34 @@ class WrapperClassBuilder(
         }
 
     private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
-        this.isSuspend -> this.addStatement(
-            "return %T(%M) { ${originalFunSpec.asInvocation()} }",
-            SuspendWrapper::class,
-            scopeProviderMemberName
-        )
-        originalFunSpec.returnType.isFlow -> this.addStatement(
-            "return %T(%M, ${originalFunSpec.asInvocation()})",
-            FlowWrapper::class,
-            scopeProviderMemberName
-        )
+        this.isSuspend -> {
+            if (scopeProviderMemberName != null) {
+                this.addStatement(
+                    "return %T(%M) { ${originalFunSpec.asInvocation()} }",
+                    SuspendWrapper::class,
+                    scopeProviderMemberName
+                )
+            } else {
+                this.addStatement(
+                    "return %T(null) { ${originalFunSpec.asInvocation()} }",
+                    SuspendWrapper::class
+                )
+            }
+        }
+        originalFunSpec.returnType.isFlow -> {
+            if (scopeProviderMemberName != null) {
+                this.addStatement(
+                    "return %T(%M, ${originalFunSpec.asInvocation()})",
+                    FlowWrapper::class,
+                    scopeProviderMemberName
+                )
+            } else {
+                this.addStatement(
+                    "return %T(null, ${originalFunSpec.asInvocation()})",
+                    FlowWrapper::class
+                )
+            }
+        }
         else -> this.addStatement("return ${originalFunSpec.asInvocation()}")
     }
 

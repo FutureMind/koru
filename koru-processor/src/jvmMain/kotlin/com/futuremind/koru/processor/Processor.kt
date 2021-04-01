@@ -191,7 +191,7 @@ class Processor : AbstractProcessor() {
     private fun obtainScopeProviderMemberName(
         annotation: ToNativeClass,
         scopeProviders: Map<ClassName, PropertySpec>
-    ): MemberName {
+    ): MemberName? {
         //this is the dirtiest hack ever but it works :O
         //there probably is some way of doing this via kotlinpoet-metadata
         //https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
@@ -207,10 +207,12 @@ class Processor : AbstractProcessor() {
         ) {
             throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
         }
-      return MemberName(
-          packageName = (typeMirror?.asTypeName() as ClassName).packageName,
-          simpleName = checkNotNull(scopeProviders[typeMirror.asTypeName()]).name
-      )
+      return scopeProviders[typeMirror?.asTypeName()]?.let {
+          MemberName(
+              packageName = (typeMirror?.asTypeName() as ClassName).packageName,
+              simpleName = it.name
+          )
+      }
     }
 
     private fun String.nonEmptyOr(or: String) = when (this.isEmpty()) {
