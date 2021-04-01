@@ -76,32 +76,18 @@ class WrapperClassBuilder(
 
     private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
         this.isSuspend -> {
-            if (scopeProviderMemberName != null) {
-                this.addStatement(
-                    "return %T(%M) { ${originalFunSpec.asInvocation()} }",
-                    SuspendWrapper::class,
-                    scopeProviderMemberName
-                )
-            } else {
-                this.addStatement(
-                    "return %T(null) { ${originalFunSpec.asInvocation()} }",
-                    SuspendWrapper::class
-                )
-            }
+            this.addStatement(
+                "return %T(%M) { ${originalFunSpec.asInvocation()} }",
+                SuspendWrapper::class,
+                scopeProviderMemberName ?: "null"
+            )
         }
         originalFunSpec.returnType.isFlow -> {
-            if (scopeProviderMemberName != null) {
-                this.addStatement(
-                    "return %T(%M, ${originalFunSpec.asInvocation()})",
-                    FlowWrapper::class,
-                    scopeProviderMemberName
-                )
-            } else {
-                this.addStatement(
-                    "return %T(null, ${originalFunSpec.asInvocation()})",
-                    FlowWrapper::class
-                )
-            }
+            this.addStatement(
+                "return %T(%M, ${originalFunSpec.asInvocation()})",
+                FlowWrapper::class,
+                scopeProviderMemberName ?: "null"
+            )
         }
         else -> this.addStatement("return ${originalFunSpec.asInvocation()}")
     }
