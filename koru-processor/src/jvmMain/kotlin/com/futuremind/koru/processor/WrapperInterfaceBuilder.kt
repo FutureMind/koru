@@ -13,7 +13,7 @@ class WrapperInterfaceBuilder(
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
-                .addReturnStatement(originalFuncSpec.returnType)
+                .addReturnType(originalFuncSpec.returnType)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.add(KModifier.ABSTRACT)

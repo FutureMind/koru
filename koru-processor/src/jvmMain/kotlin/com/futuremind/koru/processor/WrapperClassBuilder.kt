@@ -1,7 +1,7 @@
 package com.futuremind.koru.processor
 
-import com.futuremind.koru.SuspendWrapper
 import com.futuremind.koru.FlowWrapper
+import com.futuremind.koru.SuspendWrapper
 import com.squareup.kotlinpoet.*
 
 
@@ -32,7 +32,7 @@ class WrapperClassBuilder(
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
                 .addFunctionBody(originalFuncSpec)
-                .addReturnStatement(originalFuncSpec.returnType)
+                .addReturnType(originalFuncSpec.returnType)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.remove(KModifier.ABSTRACT) //when we create class, we always wrap into a concrete impl
@@ -74,35 +74,43 @@ class WrapperClassBuilder(
             }
         }
 
+    //this could be simplified in the future, but for now: https://github.com/square/kotlinpoet/issues/966
     private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
-        this.isSuspend -> {
-            this.addCode(
-                buildCodeBlock {
-                    add("return %T(", SuspendWrapper::class)
-                    if (scopeProviderMemberName != null) {
-                        add("%M", scopeProviderMemberName)
-                    } else {
-                        add("null")
-                    }
-                    add(") { ${originalFunSpec.asInvocation()} }")
-                }
-            )
-        }
-        originalFunSpec.returnType.isFlow -> {
-            this.addCode(
-                buildCodeBlock {
-                    add("return %T(", FlowWrapper::class)
-                    if (scopeProviderMemberName != null) {
-                        add("%M", scopeProviderMemberName)
-                    } else {
-                        add("null")
-                    }
-                    add(", ${originalFunSpec.asInvocation()})")
-                }
-            )
-        }
-        else -> this.addStatement("return ${originalFunSpec.asInvocation()}")
+        this.isSuspend -> wrapOriginalSuspendFunction(originalFunSpec)
+        originalFunSpec.returnType.isFlow -> wrapOriginalFlowFunction(originalFunSpec,)
+        else -> callOriginalBlockingFunction(originalFunSpec)
     }
+
+    /** E.g. return SuspendWrapper(mainScopeProvider) { doSth(whatever) }*/
+    private fun FunSpec.Builder.wrapOriginalSuspendFunction(
+        originalFunSpec: FunSpec
+    ): FunSpec.Builder = addCode(
+        buildCodeBlock {
+            add("return %T(", SuspendWrapper::class)
+            when (scopeProviderMemberName) {
+                null -> add("null")
+                else -> add("%M", scopeProviderMemberName)
+            }
+            add(") { ${originalFunSpec.asInvocation()} }")
+        }
+    )
+
+    /** E.g. return FlowWrapper(mainScopeProvider, doSth(whatever)) */
+    private fun FunSpec.Builder.wrapOriginalFlowFunction(
+        originalFunSpec: FunSpec
+    ): FunSpec.Builder = addCode(
+        buildCodeBlock {
+            add("return %T(", FlowWrapper::class)
+            when (scopeProviderMemberName) {
+                null -> add("null")
+                else -> add("%M", scopeProviderMemberName)
+            }
+            add(", ${originalFunSpec.asInvocation()})")
+        }
+    )
+
+    private fun FunSpec.Builder.callOriginalBlockingFunction(originalFunSpec: FunSpec): FunSpec.Builder =
+        this.addStatement("return ${originalFunSpec.asInvocation()}")
 
     private fun FunSpec.asInvocation(): String {
         val paramsDeclaration = parameters.joinToString(", ") { it.name }

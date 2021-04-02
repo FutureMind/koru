@@ -7,7 +7,7 @@ import com.futuremind.koru.FlowWrapper
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 
-fun FunSpec.Builder.addReturnStatement(returnType: TypeName?): FunSpec.Builder = when {
+fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when {
     this.isSuspend -> this.returns(
         SuspendWrapper::class.asTypeName().parameterizedBy(returnType.orUnit)
     )
