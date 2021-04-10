@@ -278,6 +278,66 @@ class TypesGenerationTest {
         )
     }
 
+    @Test
+    fun `should not wrap private functions when generating class`() {
+
+        compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "privateClass.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import kotlinx.coroutines.flow.Flow
+
+                            @ToNativeClass
+                            class PrivateFunctionsExample {
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                                private fun blockingPrivate(whatever: Int) : Float = TODO()
+                                private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
+                                private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.PrivateFunctionsExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+        //enough to check it compiles, it would not with wrapped private function
+
+    }
+
+    @Test
+    fun `should not wrap private functions when generating interface`() {
+
+        compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "privateInterface.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+
+                            @ToNativeInterface
+                            class PrivateFunctionsExample {
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                                private fun blockingPrivate(whatever: Int) : Float = TODO()
+                                private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
+                                private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.PrivateFunctionsExample$defaultInterfaceNameSuffix",
+            tempDir = tempDir
+        )
+        //enough to check it compiles, it would not with wrapped private function
+
+    }
+
     //TODO consider vals handling as well
     @Test
     fun `should properly copy all superinterfaces unrelated to our wrappers`() {

@@ -10,6 +10,7 @@ class WrapperInterfaceBuilder(
 ) {
 
     private val functions = poetMetadataSpec.funSpecs
+        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()

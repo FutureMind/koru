@@ -28,6 +28,7 @@ class WrapperClassBuilder(
             .build()
 
     private val functions = originalTypeSpec.funSpecs
+        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
