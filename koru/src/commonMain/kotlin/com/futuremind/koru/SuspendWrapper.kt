@@ -10,10 +10,6 @@ class SuspendWrapper<T>(
     private val suspender: suspend () -> T
 ) {
 
-    init {
-        freeze()
-    }
-
     fun subscribe(
         onSuccess: (item: T) -> Unit,
         onThrow: (error: Throwable) -> Unit
@@ -34,6 +30,6 @@ class SuspendWrapper<T>(
         } catch (error: Throwable) {
             onThrow(error.freeze())
         }
-    }.freeze()
+    }
 
 }

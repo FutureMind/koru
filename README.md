@@ -242,10 +242,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.3.6")
+                implementation("com.futuremind:koru:0.3.7")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.3.6"
+                        "com.futuremind", "koru-processor", "0.3.7"
                     )
                 )
 

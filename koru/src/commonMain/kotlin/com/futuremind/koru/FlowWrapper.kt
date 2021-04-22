@@ -10,10 +10,6 @@ class FlowWrapper<T>(
     private val flow: Flow<T>
 ) {
 
-    init {
-        freeze()
-    }
-
     fun subscribe(
         onEach: (item: T) -> Unit,
         onComplete: () -> Unit,
@@ -36,5 +32,4 @@ class FlowWrapper<T>(
         .catch { onThrow(it.freeze()) }
         .onCompletion { onComplete() }
         .launchIn(scope)
-        .freeze()
 }
