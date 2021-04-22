@@ -45,7 +45,7 @@ kotlin {
                 implementation("com.squareup:kotlinpoet-metadata-specs:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-classinspector-elements:$kotlinpoetVersion")
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3-native-mt")
             }
         }
 
