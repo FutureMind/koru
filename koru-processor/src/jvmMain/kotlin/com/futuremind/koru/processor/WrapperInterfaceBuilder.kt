@@ -6,10 +6,10 @@ import com.squareup.kotlinpoet.TypeSpec
 
 class WrapperInterfaceBuilder(
     private val newTypeName: String,
-    poetMetadataSpec: TypeSpec
+    originalTypeSpec: TypeSpec
 ) {
 
-    private val functions = poetMetadataSpec.funSpecs
+    private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
@@ -22,9 +22,25 @@ class WrapperInterfaceBuilder(
                 .build()
         }
 
+    private val properties = originalTypeSpec.propertySpecs
+        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .map { originalPropertySpec ->
+            originalPropertySpec
+                .toBuilder(
+                    name = originalPropertySpec.name,
+                    type = originalPropertySpec.wrappedType
+                )
+                .mutable(false)
+                .apply {
+                    modifiers.add(KModifier.ABSTRACT)
+                }
+                .build()
+        }
+
     fun build(): TypeSpec = TypeSpec
         .interfaceBuilder(newTypeName)
         .addFunctions(functions)
+        .addProperties(properties)
         .build()
 
 }

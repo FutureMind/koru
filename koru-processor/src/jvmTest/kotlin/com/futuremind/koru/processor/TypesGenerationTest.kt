@@ -27,6 +27,8 @@ class TypesGenerationTest {
 
                             @ToNativeInterface
                             interface InterfaceGenerationExample {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
                                 fun blocking(whatever: Int) : Float
                                 suspend fun suspending(whatever: Int) : Float
                                 fun flow(whatever: Int) : Flow<Float>
@@ -38,6 +40,8 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
