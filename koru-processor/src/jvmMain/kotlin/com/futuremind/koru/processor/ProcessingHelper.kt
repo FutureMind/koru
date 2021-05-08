@@ -1,10 +1,10 @@
 package com.futuremind.koru.processor
 
 import com.squareup.kotlinpoet.*
-import kotlinx.coroutines.flow.Flow
 import com.futuremind.koru.SuspendWrapper
 import com.futuremind.koru.FlowWrapper
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import kotlinx.coroutines.flow.*
 
 
 fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when {
@@ -18,7 +18,14 @@ fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when
 }
 
 val TypeName?.isFlow: Boolean
-    get() = (this as? ParameterizedTypeName)?.rawType == Flow::class.asTypeName()
+    get() {
+        val rawType = (this as? ParameterizedTypeName)?.rawType?.topLevelClassName()
+        return rawType == Flow::class.asTypeName()
+            || rawType == StateFlow::class.asTypeName()
+            || rawType == MutableStateFlow::class.asTypeName()
+            || rawType == SharedFlow::class.asTypeName()
+            || rawType == MutableSharedFlow::class.asTypeName()
+    }
 
 private val TypeName?.flowGenericType: TypeName
     get() = (this as? ParameterizedTypeName)?.typeArguments?.get(0)
