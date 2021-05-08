@@ -103,5 +103,39 @@ class FunctionReturnTypeConversionTest {
         generatedClass.methodReturnType("returnSthComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
+    @Test
+    fun `should generate wrappers for SharedFlow, StateFlow etc returning functions`() {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "flow2.kt",
+                """
+                package com.futuremind.kmm101.test
+                
+                import com.futuremind.koru.ToNativeClass
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.MutableStateFlow
+                import kotlinx.coroutines.flow.MutableSharedFlow
+                import kotlinx.coroutines.flow.SharedFlow
+                import kotlinx.coroutines.flow.StateFlow
+
+                @ToNativeClass
+                class VariousFlowExample {
+                    fun stateFlow(whatever: Int) : StateFlow<Float> = TODO()
+                    fun sharedFlow(whatever: Int) : SharedFlow<Float> = TODO()
+                    fun mutableStateFlow(whatever: Int) : MutableStateFlow<Float> = TODO()
+                    fun mutableSharedFlow(whatever: Int) : MutableSharedFlow<Float> = TODO()
+                }
+            """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.VariousFlowExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedClass.methodReturnType("stateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.methodReturnType("sharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.methodReturnType("mutableStateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.methodReturnType("mutableSharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+    }
 
 }
