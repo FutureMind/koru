@@ -38,9 +38,9 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
-        generatedType.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedType.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedType.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
     @Test
@@ -68,9 +68,9 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
-        generatedType.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedType.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedType.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
     @Test
@@ -98,9 +98,9 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe false
-        generatedType.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedType.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedType.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
     @Test
@@ -128,9 +128,9 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe false
-        generatedType.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedType.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedType.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
     @Test
@@ -164,15 +164,15 @@ class TypesGenerationTest {
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         generatedInterface.java.isInterface shouldBe true
-        generatedInterface.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedInterface.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedInterface.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedInterface.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedInterface.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedInterface.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
 
         generatedClass.java.isInterface shouldBe false
         generatedClass.supertypes.map { it.toString() } shouldContain "com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix"
-        generatedClass.methodReturnType("blocking") shouldBe "kotlin.Float"
-        generatedClass.methodReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedClass.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
     @Test
@@ -375,8 +375,8 @@ class TypesGenerationTest {
             tempDir = tempDir
         )
 
-        generatedType.methodReturnType("doWhatever") shouldBe "kotlin.String"
-        generatedType.methodReturnType("doWhateverSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.String>"
+        generatedType.memberReturnType("doWhatever") shouldBe "kotlin.String"
+        generatedType.memberReturnType("doWhateverSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.String>"
     }
 
 }

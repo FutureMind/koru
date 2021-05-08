@@ -51,10 +51,10 @@ fun prepareCompilation(
         verbose = false
     }
 
-fun KClass<*>.method(methodName: String) =
+fun KClass<*>.member(methodName: String) =
     members.find { it.name == methodName }!!
 
-fun KClass<*>.methodReturnType(methodName: String) = method(methodName).returnType.toString()
+fun KClass<*>.memberReturnType(methodName: String) = member(methodName).returnType.toString()
 
 fun Collection<File>.getContentByFilename(filename: String) = this
     .find { it.name == filename }!!

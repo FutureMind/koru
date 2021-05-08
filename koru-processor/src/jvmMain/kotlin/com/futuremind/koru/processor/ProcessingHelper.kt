@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.coroutines.flow.*
 
 
-fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when {
+fun FunSpec.Builder.setReturnType(returnType: TypeName?): FunSpec.Builder = when {
     this.isSuspend -> this.returns(
         SuspendWrapper::class.asTypeName().parameterizedBy(returnType.orUnit)
     )
@@ -15,6 +15,11 @@ fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when
         FlowWrapper::class.asTypeName().parameterizedBy(returnType.flowGenericType)
     )
     else -> this.returns(returnType.orUnit)
+}
+
+val PropertySpec.wrappedType get() = when {
+    type.isFlow -> FlowWrapper::class.asTypeName().parameterizedBy(type.flowGenericType)
+    else -> type
 }
 
 val TypeName?.isFlow: Boolean
