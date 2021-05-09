@@ -85,7 +85,7 @@ class WrapperClassBuilder(
 
     /**
      * if we have an interface generated based on class signature, we need to add the override
-     * modifier to its methods explicitly.
+     * modifier to its properties explicitly.
      */
     private fun PropertySpec.overridesGeneratedInterface(): Boolean {
 
@@ -127,7 +127,7 @@ class WrapperClassBuilder(
     private fun FunSpec.Builder.setGetterBody(originalPropSpec: PropertySpec): FunSpec.Builder {
         val getterInvocation = when {
             originalPropSpec.type.isFlow -> flowWrapperFunctionBody(originalPropSpec.asInvocation()).toString()
-            else -> "return  ${originalPropSpec.asInvocation()}"
+            else -> "return ${originalPropSpec.asInvocation()}"
         }
         return this.addStatement(getterInvocation)
     }
