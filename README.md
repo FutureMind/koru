@@ -50,20 +50,22 @@ loadUserUseCaseIos.loadUser(username: "foo").subscribe(
 
 From here it can be easily wrapped into RxSwift `Single<User?>` or Combine `AnyPublisher<User?, Error>`.
 
-## Generated functions - Suspend, Flow and regular
+## Generated functions / properties - Suspend, Flow and regular
 
-The wrappers generate different return types based on the original function signature
+The wrappers generate different return types based on the original member signature
 
 | Original | Wrapper |
 |-|-|
 | `suspend` fun returning `T` | fun returning `SuspendWrapper<T>` |
 | fun returning `Flow<T>` | fun returning `FlowWrapper<T>` |
 | fun returning `T` | fun returning `T` |
+| val / var returning `Flow<T>` | val returning `FlowWrapper<T>` |
+| val / var returning `T` | val returning `T` |
 
 So, for example, this class:
 
 ```kotlin
-@ToNativeClass(name = LoadUserUseCaseIos)
+@ToNativeClass(name = "LoadUserUseCaseIos")
 class LoadUserUseCase(private val service: Service) {
 
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
@@ -242,10 +244,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.3.7")
+                implementation("com.futuremind:koru:0.4.0")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.3.7"
+                        "com.futuremind", "koru-processor", "0.4.0"
                     )
                 )
 

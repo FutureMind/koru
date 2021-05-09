@@ -13,4 +13,4 @@ buildscript {
 
 
 group = "com.futuremind"
-version = "0.3.7"
+version = "0.4.0"
