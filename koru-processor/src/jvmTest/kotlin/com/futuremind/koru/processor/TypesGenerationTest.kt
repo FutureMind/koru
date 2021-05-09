@@ -61,6 +61,8 @@ class TypesGenerationTest {
 
                             @ToNativeInterface
                             class InterfaceGenerationExample {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
@@ -72,6 +74,8 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
@@ -91,6 +95,8 @@ class TypesGenerationTest {
 
                             @ToNativeClass
                             interface ClassGenerationExample {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
                                 fun blocking(whatever: Int) : Float
                                 suspend fun suspending(whatever: Int) : Float
                                 fun flow(whatever: Int) : Flow<Float>
@@ -102,6 +108,8 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe false
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
@@ -121,6 +129,8 @@ class TypesGenerationTest {
 
                             @ToNativeClass
                             class ClassGenerationExample {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
@@ -132,6 +142,8 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe false
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
@@ -164,14 +176,10 @@ class TypesGenerationTest {
             tempDir = tempDir
         ).compile()
 
-        println(compilationResult.generatedFiles)
         val generatedInterface = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
         val generatedClass = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-//        generatedInterface.members.forEach { println(it) }
-//        generatedClass.members.forEach { println(it) }
 
         generatedInterface.java.isInterface shouldBe true
         generatedInterface.memberReturnType("someVal") shouldBe "kotlin.Float"
@@ -205,9 +213,11 @@ class TypesGenerationTest {
 
                             @ToNativeInterface
                             interface IExample {
-                                fun blocking(whatever: Int) : Float = TODO()
-                                suspend fun suspending(whatever: Int) : Float = TODO()
-                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
                             }
                         """
                 ),
@@ -222,6 +232,8 @@ class TypesGenerationTest {
 
                             @ToNativeClass
                             class Example : IExample {
+                                override val someVal : Float = TODO()
+                                override val someValFlow : Flow<Float> = TODO()
                                 override fun blocking(whatever: Int) : Float = TODO()
                                 override suspend fun suspending(whatever: Int) : Float = TODO()
                                 override fun flow(whatever: Int) : Flow<Float> = TODO()
@@ -293,7 +305,7 @@ class TypesGenerationTest {
     }
 
     @Test
-    fun `should not wrap private functions when generating class`() {
+    fun `should not wrap private members when generating class`() {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -306,9 +318,13 @@ class TypesGenerationTest {
 
                             @ToNativeClass
                             class PrivateFunctionsExample {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
+                                private val someValPrivate : Float = TODO()
+                                private val someValFlowPrivate : Flow<Float> = TODO()
                                 private fun blockingPrivate(whatever: Int) : Float = TODO()
                                 private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
                                 private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
