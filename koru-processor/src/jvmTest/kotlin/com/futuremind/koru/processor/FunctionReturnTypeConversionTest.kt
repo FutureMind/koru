@@ -37,9 +37,9 @@ class FunctionReturnTypeConversionTest {
             tempDir = tempDir
         )
 
-        generatedClass.methodReturnType("doSth") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Unit>"
-        generatedClass.methodReturnType("returnSthSimple") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("returnSthComplex") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
+        generatedClass.memberReturnType("doSth") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Unit>"
+        generatedClass.memberReturnType("returnSthSimple") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
     @Test
@@ -67,9 +67,9 @@ class FunctionReturnTypeConversionTest {
             tempDir = tempDir
         )
 
-        generatedClass.methodReturnType("doSth") shouldBe "kotlin.Unit"
-        generatedClass.methodReturnType("returnSthSimple") shouldBe "kotlin.Float"
-        generatedClass.methodReturnType("returnSthComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
+        generatedClass.memberReturnType("doSth") shouldBe "kotlin.Unit"
+        generatedClass.memberReturnType("returnSthSimple") shouldBe "kotlin.Float"
+        generatedClass.memberReturnType("returnSthComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
     }
 
     @Test
@@ -98,9 +98,9 @@ class FunctionReturnTypeConversionTest {
             tempDir = tempDir
         )
 
-        generatedClass.methodReturnType("doSth") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Unit>"
-        generatedClass.methodReturnType("returnSthSimple") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("returnSthComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
+        generatedClass.memberReturnType("doSth") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Unit>"
+        generatedClass.memberReturnType("returnSthSimple") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
     @Test
@@ -132,10 +132,47 @@ class FunctionReturnTypeConversionTest {
             tempDir = tempDir
         )
 
-        generatedClass.methodReturnType("stateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("sharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("mutableStateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
-        generatedClass.methodReturnType("mutableSharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("stateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("sharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("mutableStateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("mutableSharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+    }
+
+    @Test
+    fun `should generate wrappers for properties`() {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "props1.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import kotlinx.coroutines.flow.Flow
+
+                            interface Whatever
+
+                            @ToNativeClass
+                            class PropertiesExample {
+                                val someVal : Float = TODO()
+                                var someVar : Float = TODO()
+                                val someValComplex : List<Map<Int, Whatever>> = TODO()
+                                val someValFlow : Flow<Float> = TODO()
+                                var someVarFlow : Flow<Float> = TODO()
+                                val someValFlowComplex : Flow<List<Map<Int, Whatever>>> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.PropertiesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedClass.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedClass.memberReturnType("someVar") shouldBe "kotlin.Float"
+        generatedClass.memberReturnType("someValComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
+        generatedClass.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("someVarFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("someValFlowComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
 }

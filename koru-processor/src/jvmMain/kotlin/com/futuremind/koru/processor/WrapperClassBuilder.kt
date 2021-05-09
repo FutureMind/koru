@@ -32,28 +32,70 @@ class WrapperClassBuilder(
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
-                .addFunctionBody(originalFuncSpec)
-                .addReturnType(originalFuncSpec.returnType)
+                .setFunctionBody(originalFuncSpec)
+                .setReturnType(originalFuncSpec)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.remove(KModifier.ABSTRACT) //when we create class, we always wrap into a concrete impl
-                    addMissingOverrideModifier(originalFuncSpec)
+                    if (originalFuncSpec.overridesGeneratedInterface()) {
+                        this.modifiers.add(KModifier.OVERRIDE)
+                    }
                 }
                 .build()
         }
 
-    //if we have an interface generated based on class signature, we need to add the override modifier to its methods explicitly
-    private fun FunSpec.Builder.addMissingOverrideModifier(originalFuncSpec: FunSpec) {
+    private val properties = originalTypeSpec.propertySpecs
+        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .map { originalPropertySpec ->
+            PropertySpec
+                .builder(
+                    name = originalPropertySpec.name,
+                    type = originalPropertySpec.wrappedType
+                )
+                .getter(
+                    FunSpec.getterBuilder()
+                        .setGetterBody(originalPropertySpec)
+                        .build()
+                )
+                .mutable(false)
+                .apply {
+                    modifiers.remove(KModifier.ABSTRACT)
+                    if (originalPropertySpec.overridesGeneratedInterface()) {
+                        this.modifiers.add(KModifier.OVERRIDE)
+                    }
+                }
+                .build()
+        }
 
+    /**
+     * if we have an interface generated based on class signature, we need to add the override
+     * modifier to its methods explicitly
+     */
+    private fun FunSpec.overridesGeneratedInterface(): Boolean {
+
+        //not comparing types because we're comparing koru-wrapped interface with original
         fun FunSpec.hasSameSignature(other: FunSpec) =
             this.name == other.name && this.parameters == other.parameters
 
         fun TypeSpec.containsFunctionSignature() =
-            this.funSpecs.any { it.hasSameSignature(originalFuncSpec) }
+            this.funSpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
 
-        if (originalToGeneratedInterface?.generated?.typeSpec?.containsFunctionSignature() == true) {
-            this.modifiers.add(KModifier.OVERRIDE)
-        }
+        return originalToGeneratedInterface?.generated?.typeSpec?.containsFunctionSignature() == true
+    }
+
+    /**
+     * if we have an interface generated based on class signature, we need to add the override
+     * modifier to its properties explicitly.
+     */
+    private fun PropertySpec.overridesGeneratedInterface(): Boolean {
+
+        //not comparing types because we're comparing koru-wrapped interface with original
+        fun PropertySpec.hasSameSignature(other: PropertySpec) = this.name == other.name
+
+        fun TypeSpec.containsPropertySignature() =
+            this.propertySpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
+
+        return originalToGeneratedInterface?.generated?.typeSpec?.containsPropertySignature() == true
     }
 
     /**
@@ -76,10 +118,18 @@ class WrapperClassBuilder(
         }
 
     //this could be simplified in the future, but for now: https://github.com/square/kotlinpoet/issues/966
-    private fun FunSpec.Builder.addFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
-        this.isSuspend -> wrapOriginalSuspendFunction(originalFunSpec)
-        originalFunSpec.returnType.isFlow -> wrapOriginalFlowFunction(originalFunSpec,)
+    private fun FunSpec.Builder.setFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
+        originalFunSpec.isSuspend -> wrapOriginalSuspendFunction(originalFunSpec)
+        originalFunSpec.returnType.isFlow -> wrapOriginalFlowFunction(originalFunSpec)
         else -> callOriginalBlockingFunction(originalFunSpec)
+    }
+
+    private fun FunSpec.Builder.setGetterBody(originalPropSpec: PropertySpec): FunSpec.Builder {
+        val getterInvocation = when {
+            originalPropSpec.type.isFlow -> flowWrapperFunctionBody(originalPropSpec.asInvocation()).toString()
+            else -> "return ${originalPropSpec.asInvocation()}"
+        }
+        return this.addStatement(getterInvocation)
     }
 
     /** E.g. return SuspendWrapper(mainScopeProvider) { doSth(whatever) }*/
@@ -100,15 +150,17 @@ class WrapperClassBuilder(
     private fun FunSpec.Builder.wrapOriginalFlowFunction(
         originalFunSpec: FunSpec
     ): FunSpec.Builder = addCode(
-        buildCodeBlock {
-            add("return %T(", FlowWrapper::class)
-            when (scopeProviderMemberName) {
-                null -> add("null")
-                else -> add("%M", scopeProviderMemberName)
-            }
-            add(", ${originalFunSpec.asInvocation()})")
-        }
+        flowWrapperFunctionBody(originalFunSpec.asInvocation())
     )
+
+    private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
+        add("return %T(", FlowWrapper::class)
+        when (scopeProviderMemberName) {
+            null -> add("null")
+            else -> add("%M", scopeProviderMemberName)
+        }
+        add(", ${callOriginal})")
+    }
 
     private fun FunSpec.Builder.callOriginalBlockingFunction(originalFunSpec: FunSpec): FunSpec.Builder =
         this.addStatement("return ${originalFunSpec.asInvocation()}")
@@ -118,11 +170,16 @@ class WrapperClassBuilder(
         return "${WRAPPED_PROPERTY_NAME}.${this.name}($paramsDeclaration)"
     }
 
+    private fun PropertySpec.asInvocation(): String {
+        return "${WRAPPED_PROPERTY_NAME}.${this.name}"
+    }
+
     fun build(): TypeSpec = TypeSpec
         .classBuilder(newTypeName)
         .addSuperinterfaces(superInterfaces)
         .primaryConstructor(constructorSpec)
         .addProperty(wrappedClassPropertySpec)
+        .addProperties(properties)
         .addFunctions(functions)
         .build()
 

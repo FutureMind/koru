@@ -7,14 +7,19 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.coroutines.flow.*
 
 
-fun FunSpec.Builder.addReturnType(returnType: TypeName?): FunSpec.Builder = when {
-    this.isSuspend -> this.returns(
-        SuspendWrapper::class.asTypeName().parameterizedBy(returnType.orUnit)
+fun FunSpec.Builder.setReturnType(originalFunSpec: FunSpec): FunSpec.Builder = when {
+    originalFunSpec.isSuspend -> this.returns(
+        SuspendWrapper::class.asTypeName().parameterizedBy(originalFunSpec.returnType.orUnit)
     )
-    returnType.isFlow -> this.returns(
-        FlowWrapper::class.asTypeName().parameterizedBy(returnType.flowGenericType)
+    originalFunSpec.returnType.isFlow -> this.returns(
+        FlowWrapper::class.asTypeName().parameterizedBy(originalFunSpec.returnType.flowGenericType)
     )
-    else -> this.returns(returnType.orUnit)
+    else -> this.returns(originalFunSpec.returnType.orUnit)
+}
+
+val PropertySpec.wrappedType get() = when {
+    type.isFlow -> FlowWrapper::class.asTypeName().parameterizedBy(type.flowGenericType)
+    else -> type
 }
 
 val TypeName?.isFlow: Boolean
@@ -31,7 +36,7 @@ private val TypeName?.flowGenericType: TypeName
     get() = (this as? ParameterizedTypeName)?.typeArguments?.get(0)
         ?: throw IllegalStateException("Should only be called on Flow TypeName")
 
-val FunSpec.Builder.isSuspend: Boolean
+val FunSpec.isSuspend: Boolean
     get() = this.modifiers.contains(KModifier.SUSPEND)
 
 private val TypeName?.orUnit
