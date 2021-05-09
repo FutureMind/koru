@@ -68,15 +68,16 @@ So, for example, this class:
 @ToNativeClass(name = "LoadUserUseCaseIos")
 class LoadUserUseCase(private val service: Service) {
 
-    override val someone get() = service.getUser("someone")
-
-    override val someoneFlow = service.observeUser("someone")
-
     suspend fun loadUser(username: String) : User? = service.loadUser(username)
     
     fun observeUser(username: String) : Flow<User?> = service.observeUser(username)
     
     fun getUser(username: String) : User? = service.getUser(username)
+
+    val someone : User? get() = service.getUser("someone")
+
+    val someoneFlow : Flow<User> = service.observeUser("someone")
+
 }
 ```
 
@@ -85,12 +86,6 @@ becomes:
 ```kotlin
 public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
 
-    public val someone: User?
-        get() =  wrapped.someone
-
-    public val someoneFlow: FlowWrapper<User>
-        get() = com.futuremind.koru.FlowWrapper(null, wrapped.someoneFlow)
-
     public fun loadUser(username: String): SuspendWrapper<User?> =
         SuspendWrapper(null) { wrapped.loadUser(username) }
 
@@ -98,6 +93,12 @@ public class LoadUserUseCaseIos(private val wrapped: LoadUserUseCase) {
         FlowWrapper(null, wrapped.observeUser(username))
         
     public fun getUser(username: String): User? = wrapped.getUser(username)
+
+    public val someone: User?
+        get() =  wrapped.someone
+
+    public val someoneFlow: FlowWrapper<User>
+        get() = com.futuremind.koru.FlowWrapper(null, wrapped.someoneFlow)
     
 }
 ```
