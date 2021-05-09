@@ -153,6 +153,8 @@ class TypesGenerationTest {
                             @ToNativeClass
                             @ToNativeInterface
                             class Example {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
@@ -162,18 +164,26 @@ class TypesGenerationTest {
             tempDir = tempDir
         ).compile()
 
+        println(compilationResult.generatedFiles)
         val generatedInterface = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
         val generatedClass = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
+//        generatedInterface.members.forEach { println(it) }
+//        generatedClass.members.forEach { println(it) }
+
         generatedInterface.java.isInterface shouldBe true
+        generatedInterface.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedInterface.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedInterface.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedInterface.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedInterface.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
 
         generatedClass.java.isInterface shouldBe false
         generatedClass.supertypes.map { it.toString() } shouldContain "com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix"
+        generatedClass.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedClass.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedClass.memberReturnType("blocking") shouldBe "kotlin.Float"
         generatedClass.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedClass.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"

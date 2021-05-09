@@ -1,6 +1,7 @@
 package com.futuremind.koru.processor
 
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 
 
@@ -14,7 +15,7 @@ class WrapperInterfaceBuilder(
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
-                .setReturnType(originalFuncSpec.returnType)
+                .setReturnType(originalFuncSpec)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.add(KModifier.ABSTRACT)
@@ -25,8 +26,8 @@ class WrapperInterfaceBuilder(
     private val properties = originalTypeSpec.propertySpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalPropertySpec ->
-            originalPropertySpec
-                .toBuilder(
+            PropertySpec
+                .builder(
                     name = originalPropertySpec.name,
                     type = originalPropertySpec.wrappedType
                 )
