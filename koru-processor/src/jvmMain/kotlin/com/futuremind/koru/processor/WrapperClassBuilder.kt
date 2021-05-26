@@ -25,17 +25,23 @@ class WrapperClassBuilder(
             ParameterSpec
                 .builder(SCOPE_PROVIDER_PROPERTY_NAME, ScopeProvider::class.asTypeName()
                     .copy(nullable = true))
-                .defaultValue(
-                    buildCodeBlock {
-                        when (scopeProviderMemberName) {
-                            null -> add("null")
-                            else -> add("%M", scopeProviderMemberName)
-                        }
-                    }
-                )
                 .build()
         )
         .build()
+
+    private val secondaryConstructorSpec = FunSpec.constructorBuilder()
+            .addParameter(WRAPPED_PROPERTY_NAME, originalTypeName)
+            .callThisConstructor(
+                buildCodeBlock {
+                    add("%N", WRAPPED_PROPERTY_NAME)
+                    add(",")
+                    when (scopeProviderMemberName) {
+                        null -> add("null")
+                        else -> add("%M", scopeProviderMemberName)
+                    }
+                }
+            )
+            .build()
 
     private val wrappedClassPropertySpec =
         PropertySpec.builder(WRAPPED_PROPERTY_NAME, originalTypeName)
@@ -196,6 +202,7 @@ class WrapperClassBuilder(
         .classBuilder(newTypeName)
         .addSuperinterfaces(superInterfaces)
         .primaryConstructor(constructorSpec)
+        .addFunction(secondaryConstructorSpec)
         .addProperty(wrappedClassPropertySpec)
         .addProperty(scopeProviderPropertySpec)
         .addProperties(properties)
