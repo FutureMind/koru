@@ -119,8 +119,10 @@ class ScopeProviderGenerationTest {
             .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
 
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
-        generatedClass shouldContain "FlowWrapper(exportedScopeProvider_mainScopeProvider, wrapped.flow(whatever))"
-        generatedClass shouldContain "SuspendWrapper(exportedScopeProvider_mainScopeProvider) { wrapped.suspending(whatever) }"
+        generatedClass shouldContain "FlowWrapper(scopeProvider,\n" +
+                "      wrapped.flow(whatever))"
+        generatedClass shouldContain "SuspendWrapper(scopeProvider) {\n" +
+                "      wrapped.suspending(whatever) }"
 
     }
 
@@ -176,8 +178,10 @@ class ScopeProviderGenerationTest {
 
     generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
     generatedClass shouldContain "import com.futuremind.kmm101.test.scope.exportedScopeProvider_mainScopeProvider"
-    generatedClass shouldContain "FlowWrapper(exportedScopeProvider_mainScopeProvider, wrapped.flow(whatever))"
-    generatedClass shouldContain "SuspendWrapper(exportedScopeProvider_mainScopeProvider) { wrapped.suspending(whatever) }"
+    generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider,\n" +
+            "      wrapped.flow(whatever))"
+    generatedClass shouldContain "SuspendWrapper(scopeProvider) {\n" +
+            "      wrapped.suspending(whatever) }"
   }
 
     @Test
