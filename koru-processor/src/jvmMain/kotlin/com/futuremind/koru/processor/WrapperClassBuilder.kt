@@ -1,6 +1,7 @@
 package com.futuremind.koru.processor
 
 import com.futuremind.koru.FlowWrapper
+import com.futuremind.koru.ScopeProvider
 import com.futuremind.koru.SuspendWrapper
 import com.squareup.kotlinpoet.*
 
@@ -15,10 +16,25 @@ class WrapperClassBuilder(
 
     companion object {
         private const val WRAPPED_PROPERTY_NAME = "wrapped"
+        private const val SCOPE_PROVIDER_PROPERTY_NAME = "scopeProvider"
     }
 
     private val constructorSpec = FunSpec.constructorBuilder()
         .addParameter(WRAPPED_PROPERTY_NAME, originalTypeName)
+        .addParameter(
+            ParameterSpec
+                .builder(SCOPE_PROVIDER_PROPERTY_NAME, ScopeProvider::class.asTypeName()
+                    .copy(nullable = true))
+                .defaultValue(
+                    buildCodeBlock {
+                        when (scopeProviderMemberName) {
+                            null -> add("null")
+                            else -> add("%M", scopeProviderMemberName)
+                        }
+                    }
+                )
+                .build()
+        )
         .build()
 
     private val wrappedClassPropertySpec =
@@ -26,6 +42,14 @@ class WrapperClassBuilder(
             .initializer(WRAPPED_PROPERTY_NAME)
             .addModifiers(KModifier.PRIVATE)
             .build()
+
+    private val scopeProviderPropertySpec =
+        PropertySpec.builder(SCOPE_PROVIDER_PROPERTY_NAME, ScopeProvider::class.asTypeName()
+            .copy(nullable = true))
+            .initializer(SCOPE_PROVIDER_PROPERTY_NAME)
+            .addModifiers(KModifier.PRIVATE)
+            .build()
+
 
     private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
@@ -138,10 +162,7 @@ class WrapperClassBuilder(
     ): FunSpec.Builder = addCode(
         buildCodeBlock {
             add("return %T(", SuspendWrapper::class)
-            when (scopeProviderMemberName) {
-                null -> add("null")
-                else -> add("%M", scopeProviderMemberName)
-            }
+            add(SCOPE_PROVIDER_PROPERTY_NAME)
             add(") { ${originalFunSpec.asInvocation()} }")
         }
     )
@@ -155,10 +176,7 @@ class WrapperClassBuilder(
 
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
         add("return %T(", FlowWrapper::class)
-        when (scopeProviderMemberName) {
-            null -> add("null")
-            else -> add("%M", scopeProviderMemberName)
-        }
+        add(SCOPE_PROVIDER_PROPERTY_NAME)
         add(", ${callOriginal})")
     }
 
@@ -179,6 +197,7 @@ class WrapperClassBuilder(
         .addSuperinterfaces(superInterfaces)
         .primaryConstructor(constructorSpec)
         .addProperty(wrappedClassPropertySpec)
+        .addProperty(scopeProviderPropertySpec)
         .addProperties(properties)
         .addFunctions(functions)
         .build()
