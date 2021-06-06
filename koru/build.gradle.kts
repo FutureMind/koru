@@ -3,18 +3,11 @@ plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
-    id("org.jetbrains.dokka") version "1.4.20"
+    id("org.jetbrains.dokka") version "1.4.32"
 }
 
 repositories {
     mavenCentral()
-
-    /* TODO Dokka 1.4.20 and its deps not in mavenCentral yet
-         com.soywiz.korlibs.korte:korte-jvm:1.10.3
-         org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2.
-            Required by: project :koru > org.jetbrains.dokka:javadoc-plugin:1.4.20
-    */
-    jcenter()
 }
 
 kotlin {
@@ -25,7 +18,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-native-mt")
             }
         }
         val iosTest by getting {
