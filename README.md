@@ -148,11 +148,16 @@ loadUserUseCaseIos.loadUser(username: "some username").subscribe(
 <details>
   <summary>What happens under the hood?</summary>
     
-  Under the hood, a top level property `val exportedScopeProvider_mainScopeProvider = MainScopeProvider()` is created. Then, it is injected into the `SuspendWrapper`s and `FlowWrapper`s as the default scope that `launch`es the coroutines. Remember, that you can always provide custom scope if you need to.
+  Under the hood, a top level property `val exportedScopeProvider_mainScopeProvider = MainScopeProvider()` is created. Then, it is injected into the constructor of the wrapped class and then into `SuspendWrapper`s and `FlowWrapper`s as the default scope that `launch`es the coroutines. Remember, that you can always override with your custom scope if you need to.
   
   ```kotlin
-  fun flow(foo: String) = FlowWrapper(exportedScopeProvider_mainScopeProvider, wrapped.flow(foo))
-  fun suspending(foo: String) = SuspendWrapper(exportedScopeProvider_mainScopeProvider) { wrapped.suspending(foo) }
+    public class LoadUserUseCaseIos(
+      private val wrapped: LoadUserUseCase,
+      private val scopeProvider: ScopeProvider?
+    ) {
+      fun flow(foo: String) = FlowWrapper(scopeProvider, wrapped.flow(foo))
+      fun suspending(foo: String) = SuspendWrapper(scopeProvider) { wrapped.suspending(foo) }
+    }
   ```
 
 </details>
@@ -255,10 +260,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.4.0")
+                implementation("com.futuremind:koru:0.5.0")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.4.0"
+                        "com.futuremind", "koru-processor", "0.5.0"
                     )
                 )
 
