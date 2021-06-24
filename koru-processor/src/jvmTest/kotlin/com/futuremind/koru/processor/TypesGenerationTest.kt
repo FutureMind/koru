@@ -1,5 +1,6 @@
 package com.futuremind.koru.processor
 
+import com.squareup.kotlinpoet.KModifier
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.collections.shouldContain
@@ -7,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import kotlin.reflect.KVisibility
 
 class TypesGenerationTest {
 
@@ -40,6 +42,7 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
+        generatedType.visibility shouldBe KVisibility.PUBLIC
         generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
         generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
@@ -47,8 +50,9 @@ class TypesGenerationTest {
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
+
     @Test
-    fun `should generate interface from class via @ToNativeInterface`() {
+    fun `should generate interface from class via @ToNativeInterface and keep visibility`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -60,7 +64,7 @@ class TypesGenerationTest {
                             import kotlinx.coroutines.flow.Flow
 
                             @ToNativeInterface
-                            class InterfaceGenerationExample {
+                            internal class InterfaceGenerationExample {
                                 val someVal : Float = TODO()
                                 val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
@@ -74,6 +78,7 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe true
+        generatedType.visibility shouldBe KVisibility.INTERNAL
         generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
         generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
@@ -142,6 +147,42 @@ class TypesGenerationTest {
         )
 
         generatedType.java.isInterface shouldBe false
+        generatedType.visibility shouldBe KVisibility.PUBLIC
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+    }
+
+    @Test
+    fun `should generate class from class via @ToNativeClass and keep visibility`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "class5.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import kotlinx.coroutines.flow.Flow
+
+                            @ToNativeClass
+                            internal class ClassGenerationExample {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.ClassGenerationExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.java.isInterface shouldBe false
+        generatedType.visibility shouldBe KVisibility.INTERNAL
         generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
         generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
