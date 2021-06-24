@@ -38,8 +38,12 @@ class WrapperInterfaceBuilder(
                 .build()
         }
 
+
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.ifEmpty { setOf(KModifier.PUBLIC) }
+
     fun build(): TypeSpec = TypeSpec
         .interfaceBuilder(newTypeName)
+        .addModifiers(modifiers)
         .addFunctions(functions)
         .addProperties(properties)
         .build()

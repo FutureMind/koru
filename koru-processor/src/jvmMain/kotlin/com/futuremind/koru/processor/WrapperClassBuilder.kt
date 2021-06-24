@@ -97,6 +97,8 @@ class WrapperClassBuilder(
                 .build()
         }
 
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.ifEmpty { setOf(KModifier.PUBLIC) }
+
     /**
      * if we have an interface generated based on class signature, we need to add the override
      * modifier to its methods explicitly
@@ -200,6 +202,7 @@ class WrapperClassBuilder(
 
     fun build(): TypeSpec = TypeSpec
         .classBuilder(newTypeName)
+        .addModifiers(modifiers)
         .addSuperinterfaces(superInterfaces)
         .primaryConstructor(constructorSpec)
         .addFunction(secondaryConstructorSpec)
