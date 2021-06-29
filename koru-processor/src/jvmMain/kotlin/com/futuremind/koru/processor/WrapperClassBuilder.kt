@@ -19,42 +19,48 @@ class WrapperClassBuilder(
         private const val SCOPE_PROVIDER_PROPERTY_NAME = "scopeProvider"
     }
 
-    private val constructorSpec = FunSpec.constructorBuilder()
+    private val constructorSpec = FunSpec
+        .constructorBuilder()
         .addParameter(WRAPPED_PROPERTY_NAME, originalTypeName)
         .addParameter(
             ParameterSpec
-                .builder(SCOPE_PROVIDER_PROPERTY_NAME, ScopeProvider::class.asTypeName()
-                    .copy(nullable = true))
+                .builder(
+                    SCOPE_PROVIDER_PROPERTY_NAME,
+                    ScopeProvider::class.asTypeName().copy(nullable = true)
+                )
                 .build()
         )
         .build()
 
-    private val secondaryConstructorSpec = FunSpec.constructorBuilder()
-            .addParameter(WRAPPED_PROPERTY_NAME, originalTypeName)
-            .callThisConstructor(
-                buildCodeBlock {
-                    add("%N", WRAPPED_PROPERTY_NAME)
-                    add(",")
-                    when (scopeProviderMemberName) {
-                        null -> add("null")
-                        else -> add("%M", scopeProviderMemberName)
-                    }
+    private val secondaryConstructorSpec = FunSpec
+        .constructorBuilder()
+        .addParameter(WRAPPED_PROPERTY_NAME, originalTypeName)
+        .callThisConstructor(
+            buildCodeBlock {
+                add("%N", WRAPPED_PROPERTY_NAME)
+                add(",")
+                when (scopeProviderMemberName) {
+                    null -> add("null")
+                    else -> add("%M", scopeProviderMemberName)
                 }
-            )
-            .build()
+            }
+        )
+        .build()
 
-    private val wrappedClassPropertySpec =
-        PropertySpec.builder(WRAPPED_PROPERTY_NAME, originalTypeName)
-            .initializer(WRAPPED_PROPERTY_NAME)
-            .addModifiers(KModifier.PRIVATE)
-            .build()
+    private val wrappedClassPropertySpec = PropertySpec
+        .builder(WRAPPED_PROPERTY_NAME, originalTypeName)
+        .initializer(WRAPPED_PROPERTY_NAME)
+        .addModifiers(KModifier.PRIVATE)
+        .build()
 
-    private val scopeProviderPropertySpec =
-        PropertySpec.builder(SCOPE_PROVIDER_PROPERTY_NAME, ScopeProvider::class.asTypeName()
-            .copy(nullable = true))
-            .initializer(SCOPE_PROVIDER_PROPERTY_NAME)
-            .addModifiers(KModifier.PRIVATE)
-            .build()
+    private val scopeProviderPropertySpec = PropertySpec
+        .builder(
+            SCOPE_PROVIDER_PROPERTY_NAME,
+            ScopeProvider::class.asTypeName().copy(nullable = true)
+        )
+        .initializer(SCOPE_PROVIDER_PROPERTY_NAME)
+        .addModifiers(KModifier.PRIVATE)
+        .build()
 
 
     private val functions = originalTypeSpec.funSpecs
@@ -97,7 +103,10 @@ class WrapperClassBuilder(
                 .build()
         }
 
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.ifEmpty { setOf(KModifier.PUBLIC) }
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
+        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
+        it.ifEmpty { setOf(KModifier.PUBLIC) }
+    }
 
     /**
      * if we have an interface generated based on class signature, we need to add the override
