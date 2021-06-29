@@ -1,5 +1,6 @@
 package com.futuremind.koru.processor
 
+import com.squareup.kotlinpoet.KModifier
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.collections.shouldContain
@@ -7,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import kotlin.reflect.KVisibility
 
 class TypesGenerationTest {
 
@@ -46,6 +48,7 @@ class TypesGenerationTest {
         generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
+
 
     @Test
     fun `should generate interface from class via @ToNativeInterface`() {
@@ -176,8 +179,10 @@ class TypesGenerationTest {
             tempDir = tempDir
         ).compile()
 
-        val generatedInterface = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
-        val generatedClass = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
+        val generatedInterface =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
+        val generatedClass =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
@@ -198,7 +203,7 @@ class TypesGenerationTest {
     }
 
     @Test
-    fun`should match generated class with generated interface if they matched in original code`(){
+    fun `should match generated class with generated interface if they matched in original code`() {
 
         val compilationResult = prepareCompilation(
             sourceFiles = listOf(
@@ -244,8 +249,10 @@ class TypesGenerationTest {
             tempDir = tempDir
         ).compile()
 
-        val generatedInterface = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.IExample$defaultInterfaceNameSuffix").kotlin
-        val generatedClass = compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
+        val generatedInterface =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.IExample$defaultInterfaceNameSuffix").kotlin
+        val generatedClass =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultClassNameSuffix").kotlin
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
         generatedInterface.java.isInterface shouldBe true
@@ -408,5 +415,89 @@ class TypesGenerationTest {
         generatedType.memberReturnType("doWhatever") shouldBe "kotlin.String"
         generatedType.memberReturnType("doWhateverSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.String>"
     }
+
+    @Test
+    fun `should keep internal visibility when generating class or add public when omitted`() {
+
+        val compilationResult = prepareCompilation(
+            sourceFile = SourceFile.kotlin(
+                "visbility.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+
+                            @ToNativeClass
+                            @ToNativeInterface
+                            internal class InternalExample {
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeClass
+                            @ToNativeInterface
+                            class DefaultExample {
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            tempDir = tempDir
+        ).compile()
+
+        val internalInterface =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.InternalExample$defaultInterfaceNameSuffix").kotlin
+        val internalClass =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.InternalExample$defaultClassNameSuffix").kotlin
+
+        val defaultInterface =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.DefaultExample$defaultInterfaceNameSuffix").kotlin
+        val defaultClass =
+            compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.DefaultExample$defaultClassNameSuffix").kotlin
+
+        internalInterface.visibility shouldBe KVisibility.INTERNAL
+        internalClass.visibility shouldBe KVisibility.INTERNAL
+
+        defaultInterface.visibility shouldBe KVisibility.PUBLIC
+        defaultClass.visibility shouldBe KVisibility.PUBLIC
+
+    }
+
+    @Test
+    fun `should throw on interface generation from private type`() = testThrowsCompilationError(
+        source = SourceFile.kotlin(
+            "private.kt",
+            """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeInterface
+
+                        @ToNativeInterface
+                        private class PrivateClassExample {
+                            suspend fun suspending(whatever: Int) : Float = TODO()
+                        }
+                        """
+        ),
+        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+        tempDir = tempDir
+    )
+
+    @Test
+    fun `should throw on class generation from private type`() = testThrowsCompilationError(
+        source = SourceFile.kotlin(
+            "private.kt",
+            """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+
+                        @ToNativeClass
+                        private class PrivateClassExample {
+                            suspend fun suspending(whatever: Int) : Float = TODO()
+                        }
+                        """
+        ),
+        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+        tempDir = tempDir
+    )
 
 }
