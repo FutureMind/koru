@@ -39,7 +39,10 @@ class WrapperInterfaceBuilder(
         }
 
 
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.ifEmpty { setOf(KModifier.PUBLIC) }
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
+        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
+        it.ifEmpty { setOf(KModifier.PUBLIC) }
+    }
 
     fun build(): TypeSpec = TypeSpec
         .interfaceBuilder(newTypeName)
