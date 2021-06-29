@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class SuspendWrapperTest {
 
@@ -64,6 +65,25 @@ class SuspendWrapperTest {
 
         job.join()
 
+    }
+
+    @Test
+    fun testThrowsWhenScopeNotProvided() {
+
+        val wrapper = Wrapper(SomeMutableClass())
+
+        val flowWrapper = wrapper.runSomeFlow()
+        val suspendWrapper = wrapper.doSthSuspending()
+
+        assertFailsWith<IllegalArgumentException>(
+            message = "To use implicit scope, you have to provide it via @ToNativeClass.launchOnScope and @ExportedScopeProvider",
+            block = { flowWrapper.subscribe({}, {}, {}) }
+        )
+
+        assertFailsWith<IllegalArgumentException>(
+            message = "To use implicit scope, you have to provide it via @ToNativeClass.launchOnScope and @ExportedScopeProvider",
+            block = { suspendWrapper.subscribe({}, {}) }
+        )
     }
 
 }
