@@ -502,7 +502,7 @@ class TypesGenerationTest {
     )
 
     @Test
-    fun `should pass freezeWrapper param if provided to annotation`() {
+    fun `should freeze wrapper if freeze=true in annotation`() {
 
         val classToWrap = SourceFile.kotlin(
             "freeze1.kt",
@@ -536,7 +536,7 @@ class TypesGenerationTest {
     }
 
     @Test
-    fun `should pass freezeWrapper=false by default`() {
+    fun `should not freeze wrapper by default`() {
 
         val classToWrap = SourceFile.kotlin(
             "freeze2.kt",
