@@ -180,7 +180,10 @@ class WrapperClassBuilder(
         buildCodeBlock {
             add("return %T(", SuspendWrapper::class)
             add(SCOPE_PROVIDER_PROPERTY_NAME)
-            add(") { ${originalFunSpec.asInvocation()} }")
+            add(", ")
+            add("%L", false) //TODO
+            add(") ")
+            add("{ ${originalFunSpec.asInvocation()} }")
         }
     )
 
@@ -194,6 +197,7 @@ class WrapperClassBuilder(
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
         add("return %T(", FlowWrapper::class)
         add(SCOPE_PROVIDER_PROPERTY_NAME)
+        add(", %L", false) //TODO
         add(", ${callOriginal})")
     }
 

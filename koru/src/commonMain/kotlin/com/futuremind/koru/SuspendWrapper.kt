@@ -7,8 +7,13 @@ import kotlinx.coroutines.launch
 
 class SuspendWrapper<T>(
     private val scopeProvider: ScopeProvider?,
+    private val freezeWrapper: Boolean,
     private val suspender: suspend () -> T
 ) {
+
+    init {
+        if (freezeWrapper) this.freeze()
+    }
 
     fun subscribe(
         onSuccess: (item: T) -> Unit,
@@ -24,12 +29,14 @@ class SuspendWrapper<T>(
         scope: CoroutineScope,
         onSuccess: (item: T) -> Unit,
         onThrow: (error: Throwable) -> Unit
-    ): Job = scope.launch {
-        try {
-            onSuccess(suspender().freeze())
-        } catch (error: Throwable) {
-            onThrow(error.freeze())
+    ): Job = scope
+        .launch {
+            try {
+                onSuccess(suspender().freeze())
+            } catch (error: Throwable) {
+                onThrow(error.freeze())
+            }
         }
-    }
+        .apply { if (freezeWrapper) this.freeze() }
 
 }

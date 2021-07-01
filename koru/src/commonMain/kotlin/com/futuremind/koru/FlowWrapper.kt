@@ -7,8 +7,13 @@ import kotlinx.coroutines.flow.*
 
 class FlowWrapper<T>(
     private val scopeProvider: ScopeProvider?,
+    private val freezeWrapper: Boolean,
     private val flow: Flow<T>
 ) {
+
+    init {
+        if (freezeWrapper) this.freeze()
+    }
 
     fun subscribe(
         onEach: (item: T) -> Unit,
@@ -32,4 +37,5 @@ class FlowWrapper<T>(
         .catch { onThrow(it.freeze()) }
         .onCompletion { onComplete() }
         .launchIn(scope)
+        .apply { if (freezeWrapper) this.freeze() }
 }
