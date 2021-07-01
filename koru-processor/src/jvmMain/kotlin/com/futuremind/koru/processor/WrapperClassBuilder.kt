@@ -31,6 +31,14 @@ class WrapperClassBuilder(
                 )
                 .build()
         )
+        .apply {
+            if (freezeWrapper) {
+                this.addStatement(
+                    "this.%M()",
+                    MemberName("com.futuremind.koru", "freeze")
+                )
+            }
+        }
         .build()
 
     private val secondaryConstructorSpec = FunSpec

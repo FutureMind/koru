@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -531,6 +532,7 @@ class TypesGenerationTest {
 
         generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, true"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, true"
+        generatedClass shouldContain "this.freeze()"
     }
 
     @Test
@@ -564,6 +566,7 @@ class TypesGenerationTest {
 
         generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, false"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, false"
+        generatedClass shouldNotContain "this.freeze()"
     }
 
 }
