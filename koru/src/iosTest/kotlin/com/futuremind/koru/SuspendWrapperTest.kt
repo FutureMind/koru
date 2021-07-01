@@ -28,8 +28,8 @@ class SuspendWrapperTest {
     }
 
     class Wrapper(private val wrapped: SomeMutableClass) {
-        fun doSthSuspending() = SuspendWrapper(null) { wrapped.doSthSuspending() }
-        fun runSomeFlow() = FlowWrapper(null, wrapped.runSomeFlow())
+        fun doSthSuspending() = SuspendWrapper(null, false) { wrapped.doSthSuspending() }
+        fun runSomeFlow() = FlowWrapper(null, false, wrapped.runSomeFlow())
     }
 
     @Test

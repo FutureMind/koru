@@ -11,7 +11,8 @@ class WrapperClassBuilder(
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
     private val originalToGeneratedInterface: OriginalToGeneratedInterface?,
-    private val scopeProviderMemberName: MemberName?
+    private val scopeProviderMemberName: MemberName?,
+    private val freezeWrapper: Boolean
 ) {
 
     companion object {
@@ -30,6 +31,14 @@ class WrapperClassBuilder(
                 )
                 .build()
         )
+        .apply {
+            if (freezeWrapper) {
+                this.addStatement(
+                    "this.%M()",
+                    MemberName("com.futuremind.koru", "freeze")
+                )
+            }
+        }
         .build()
 
     private val secondaryConstructorSpec = FunSpec
@@ -180,7 +189,10 @@ class WrapperClassBuilder(
         buildCodeBlock {
             add("return %T(", SuspendWrapper::class)
             add(SCOPE_PROVIDER_PROPERTY_NAME)
-            add(") { ${originalFunSpec.asInvocation()} }")
+            add(", ")
+            add("%L", freezeWrapper)
+            add(") ")
+            add("{ ${originalFunSpec.asInvocation()} }")
         }
     )
 
@@ -194,6 +206,7 @@ class WrapperClassBuilder(
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
         add("return %T(", FlowWrapper::class)
         add(SCOPE_PROVIDER_PROPERTY_NAME)
+        add(", %L", freezeWrapper)
         add(", ${callOriginal})")
     }
 
