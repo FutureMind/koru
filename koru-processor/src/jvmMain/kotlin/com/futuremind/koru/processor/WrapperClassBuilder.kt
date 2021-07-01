@@ -11,7 +11,8 @@ class WrapperClassBuilder(
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
     private val originalToGeneratedInterface: OriginalToGeneratedInterface?,
-    private val scopeProviderMemberName: MemberName?
+    private val scopeProviderMemberName: MemberName?,
+    private val freezeWrapper: Boolean
 ) {
 
     companion object {
@@ -181,7 +182,7 @@ class WrapperClassBuilder(
             add("return %T(", SuspendWrapper::class)
             add(SCOPE_PROVIDER_PROPERTY_NAME)
             add(", ")
-            add("%L", false) //TODO
+            add("%L", freezeWrapper)
             add(") ")
             add("{ ${originalFunSpec.asInvocation()} }")
         }
@@ -197,7 +198,7 @@ class WrapperClassBuilder(
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
         add("return %T(", FlowWrapper::class)
         add(SCOPE_PROVIDER_PROPERTY_NAME)
-        add(", %L", false) //TODO
+        add(", %L", freezeWrapper)
         add(", ${callOriginal})")
     }
 

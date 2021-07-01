@@ -6,6 +6,7 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 annotation class ToNativeClass(
     val name: String = "",
+    val freeze: Boolean = false,
     val launchOnScope: KClass<out ScopeProvider> = NoScopeProvider::class
 )
 

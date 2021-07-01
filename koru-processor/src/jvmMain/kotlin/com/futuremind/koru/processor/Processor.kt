@@ -164,7 +164,8 @@ class Processor : AbstractProcessor() {
             originalTypeSpec = typeSpec,
             newTypeName = generatedClassName,
             originalToGeneratedInterface = originalToGeneratedInterface,
-            scopeProviderMemberName = obtainScopeProviderMemberName(annotation, scopeProviders)
+            scopeProviderMemberName = obtainScopeProviderMemberName(annotation, scopeProviders),
+            freezeWrapper = annotation.freeze
         ).build()
 
         FileSpec.builder(originalTypeName.packageName, generatedClassName)
