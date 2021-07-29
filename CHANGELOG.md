@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.7.0] - 2021-07-29
+### Changed
+- Make the annotation processor incremental
+
 ## [0.6.0] - 2021-07-01
 ### Added
 - `@ToNativeClass(freeze = true)` makes the wrapper classes and their jobs frozen.
