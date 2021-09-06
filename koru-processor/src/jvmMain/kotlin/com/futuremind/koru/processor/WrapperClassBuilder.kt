@@ -156,8 +156,6 @@ class WrapperClassBuilder(
      */
     private val superInterfaces: MutableList<TypeName> = originalTypeSpec.superinterfaces.keys
         .mapNotNull { interfaceName ->
-            println("generated ${generatedInterfaces.keys}")
-            println("current interface $interfaceName")
             when (val matchingSuper = generatedInterfaces.keys.find { it == interfaceName }) {
                 null -> null
                 else -> generatedInterfaces[matchingSuper]!!.name
@@ -166,7 +164,6 @@ class WrapperClassBuilder(
         .toMutableList()
         .apply {
             val missingSuperInterface = generatedInterfaces.values.map { it.name }.toSet().minus(this).elementAtOrNull(0)
-            println("missing superinterface: $missingSuperInterface")
             missingSuperInterface?.let { add(it) }
         }
 
