@@ -3,6 +3,8 @@ package com.futuremind.koru.processor
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -381,7 +383,7 @@ class TypesGenerationTest {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
-                "class5.kt",
+                "notAnnotatedSuperInterface.kt",
                 """
                             package com.futuremind.kmm101.test
                             
@@ -427,6 +429,9 @@ class TypesGenerationTest {
             tempDir = tempDir
         )
 
+        generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.NotAnnotatedInterface$defaultInterfaceNameSuffix"
+        generatedType.supertypes.map { it.toString() } shouldContain "com.futuremind.kmm101.test.AnnotatedInterface$defaultInterfaceNameSuffix"
+
         generatedType.memberReturnType("notAnnotatedVal") shouldBe "kotlin.Float"
         generatedType.memberReturnType("notAnnotatedFlowVal") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
         generatedType.memberReturnType("notAnnotatedBlocking") shouldBe "kotlin.Float"
@@ -438,6 +443,60 @@ class TypesGenerationTest {
         generatedType.memberReturnType("annotatedBlocking") shouldBe "kotlin.Float"
         generatedType.memberReturnType("annotatedSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
         generatedType.memberReturnType("annotatedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
+    }
+
+    @Test
+    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface FirstInterface {
+                                suspend fun firstFunction(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeInterface
+                            interface SecondInterface {
+                                suspend fun secondFunction(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeInterface
+                            interface ThirdInterface {
+                                suspend fun thirdFunction(whatever: Int) : Float = TODO()
+                            }
+                            
+                            @ToNativeClass
+                            class MultipleInterfacesExample : FirstInterface, SecondInterface, ThirdInterface {
+                                override suspend fun firstFunction(whatever: Int) : Float = TODO()
+                                override suspend fun secondFunction(whatever: Int) : Float = TODO()
+                                override suspend fun thirdFunction(whatever: Int) : Float = TODO()
+                                suspend fun fourthFunction(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
+            "com.futuremind.kmm101.test.FirstInterface$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.SecondInterface$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.ThirdInterface$defaultInterfaceNameSuffix",
+        )
+
+        generatedType.memberReturnType("firstFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("secondFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("thirdFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("fourthFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
 
     }
 
