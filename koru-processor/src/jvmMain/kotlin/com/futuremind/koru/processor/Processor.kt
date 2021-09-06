@@ -152,18 +152,19 @@ class Processor : AbstractProcessor() {
         val generatedClassName =
             annotation.name.nonEmptyOr("${originalTypeName.simpleName}Native")
 
-        val originalToGeneratedInterface: OriginalToGeneratedInterface? =
-            matchGeneratedInterfaceName(
-                superInterfacesOfClass = typeSpec.superinterfaces.keys,
-                className = originalTypeName,
-                allGeneratedInterfaces = generatedInterfaces
-            )
+//        val originalToGeneratedInterface: OriginalToGeneratedInterface? =
+//            matchGeneratedInterfaceName(
+//                superInterfacesOfClass = typeSpec.superinterfaces.keys,
+//                className = originalTypeName,
+//                allGeneratedInterfaces = generatedInterfaces
+//            )
 
         val classToGenerateSpec = WrapperClassBuilder(
             originalTypeName = originalTypeName,
             originalTypeSpec = typeSpec,
             newTypeName = generatedClassName,
-            originalToGeneratedInterface = originalToGeneratedInterface,
+            generatedInterfaces = generatedInterfaces,
+//            originalToGeneratedInterface = originalToGeneratedInterface,
             scopeProviderMemberName = obtainScopeProviderMemberName(annotation, scopeProviders),
             freezeWrapper = annotation.freeze
         ).build()
@@ -175,19 +176,19 @@ class Processor : AbstractProcessor() {
 
     }
 
-    private fun matchGeneratedInterfaceName(
-        superInterfacesOfClass: Set<TypeName>,
-        className: TypeName,
-        allGeneratedInterfaces: Map<TypeName, GeneratedInterface>
-    ): OriginalToGeneratedInterface? = mutableSetOf<TypeName>()
-        .apply {
-            addAll(superInterfacesOfClass)
-            add(className)
-        }
-        .find { allGeneratedInterfaces[it] != null }
-        ?.let { originalName ->
-            OriginalToGeneratedInterface(originalName, allGeneratedInterfaces[originalName]!!)
-        }
+//    private fun matchGeneratedInterfaceName(
+//        superInterfacesOfClass: Set<TypeName>,
+//        className: TypeName,
+//        allGeneratedInterfaces: Map<TypeName, GeneratedInterface>
+//    ): OriginalToGeneratedInterface? = mutableSetOf<TypeName>()
+//        .apply {
+//            addAll(superInterfacesOfClass)
+//            add(className)
+//        }
+//        .find { allGeneratedInterfaces[it] != null }
+//        ?.let { originalName ->
+//            OriginalToGeneratedInterface(originalName, allGeneratedInterfaces[originalName]!!)
+//        }
 
     private fun obtainScopeProviderMemberName(
         annotation: ToNativeClass,
@@ -236,4 +237,4 @@ class Processor : AbstractProcessor() {
 }
 
 data class GeneratedInterface(val name: TypeName, val typeSpec: TypeSpec)
-data class OriginalToGeneratedInterface(val originalName: TypeName, val generated: GeneratedInterface)
+//data class OriginalToGeneratedInterface(val originalName: TypeName, val generated: GeneratedInterface)

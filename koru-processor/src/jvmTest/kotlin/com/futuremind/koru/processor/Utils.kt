@@ -29,10 +29,19 @@ fun compileAndReturnGeneratedClass(
     tempDir: File
 ): KClass<out Any> {
     val compilationResult = prepareCompilation(source, tempDir).compile()
+    debugPrintGenerated(compilationResult)
     val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
     compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
     return generatedClass.kotlin
 }
+
+fun debugPrintGenerated(compilationResult: KotlinCompilation.Result) {
+    compilationResult.generatedFiles.forEach {
+        println("\n\n"+it.absolutePath+"\n")
+        println(it.readText().trim())
+    }
+}
+
 
 fun prepareCompilation(
     sourceFile: SourceFile,

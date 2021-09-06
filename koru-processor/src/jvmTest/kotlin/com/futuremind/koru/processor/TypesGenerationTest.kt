@@ -376,9 +376,8 @@ class TypesGenerationTest {
 
     }
 
-    //TODO consider vals handling as well
     @Test
-    fun `should properly copy all superinterfaces unrelated to our wrappers`() {
+    fun `should not extend superinterface if it is not annotated (and thus should strip override annotation)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -390,22 +389,37 @@ class TypesGenerationTest {
                             import com.futuremind.koru.ToNativeInterface
                             import kotlinx.coroutines.flow.Flow
 
-                            interface UnrelatedInterface {
-                                fun doWhatever() : String
+                            //adding generic type to spice things up ;)
+                            interface NotAnnotatedInterface<T: Any> {
+                                val notAnnotatedVal : T
+                                val notAnnotatedFlowVal : Flow<T>
+                                fun notAnnotatedBlocking(whatever: Int) : T = TODO()
+                                suspend fun notAnnotatedSuspending(whatever: Int) : T = TODO()
+                                fun notAnnotatedFlow(whatever: Int) : Flow<T> = TODO()
                             }
                             
                             @ToNativeInterface
-                            interface RelatedInterface {
-                                suspend fun doWhateverSuspending() : String
+                            interface AnnotatedInterface {
+                                val annotatedVal : Float
+                                val annotatedFlowVal : Flow<Float>
+                                fun annotatedBlocking(whatever: Int) : Float = TODO()
+                                suspend fun annotatedSuspending(whatever: Int) : Float = TODO()
+                                fun annotatedFlow(whatever: Int) : Flow<Float> = TODO()
                             }
                             
                             @ToNativeClass
-                            class SuperInterfacesExample : UnrelatedInterface, RelatedInterface {
-                                fun blocking(whatever: Int) : Float = TODO()
-                                suspend fun suspending(whatever: Int) : Float = TODO()
-                                fun flow(whatever: Int) : Flow<Float> = TODO()
-                                override fun doWhatever(): String = TODO()
-                                override suspend fun doWhateverSuspending(): String = TODO()
+                            class SuperInterfacesExample : NotAnnotatedInterface<Float>, AnnotatedInterface {
+                                override val notAnnotatedVal : Float = TODO()
+                                override val notAnnotatedFlowVal : Flow<Float> = TODO()
+                                override fun notAnnotatedBlocking(whatever: Int) : Float = TODO()
+                                override suspend fun notAnnotatedSuspending(whatever: Int) : Float = TODO()
+                                override fun notAnnotatedFlow(whatever: Int) : Flow<Float> = TODO()
+
+                                override val annotatedVal : Float = TODO()
+                                override val annotatedFlowVal : Flow<Float> = TODO()
+                                override fun annotatedBlocking(whatever: Int) : Float = TODO()
+                                override suspend fun annotatedSuspending(whatever: Int) : Float = TODO()
+                                override fun annotatedFlow(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
             ),
@@ -413,8 +427,18 @@ class TypesGenerationTest {
             tempDir = tempDir
         )
 
-        generatedType.memberReturnType("doWhatever") shouldBe "kotlin.String"
-        generatedType.memberReturnType("doWhateverSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.String>"
+        generatedType.memberReturnType("notAnnotatedVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("notAnnotatedFlowVal") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("notAnnotatedBlocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("notAnnotatedSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("notAnnotatedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
+        generatedType.memberReturnType("annotatedVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("annotatedFlowVal") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("annotatedBlocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("annotatedSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("annotatedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
     }
 
     @Test
