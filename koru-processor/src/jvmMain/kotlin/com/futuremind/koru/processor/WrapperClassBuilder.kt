@@ -10,7 +10,6 @@ class WrapperClassBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
-//    private val originalToGeneratedInterface: OriginalToGeneratedInterface?,
     private val generatedInterfaces: Map<TypeName, GeneratedInterface>,
     private val scopeProviderMemberName: MemberName?,
     private val freezeWrapper: Boolean
