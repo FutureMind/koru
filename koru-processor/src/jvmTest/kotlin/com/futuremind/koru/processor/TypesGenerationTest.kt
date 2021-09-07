@@ -554,6 +554,44 @@ class TypesGenerationTest {
     }
 
     @Test
+    fun `should not add override modifier from a foreign interface just because the name matches`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "matchingFunctionNamesFalsePositive.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface FirstInterface {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+                            
+                            @ToNativeClass
+                            class MatchingNamesExample {
+                                val someVal : Float = TODO()
+                                val someValFlow : Flow<Float> = TODO()
+                                fun blocking(whatever: Int) : Float = TODO()
+                                suspend fun suspending(whatever: Int) : Float = TODO()
+                                fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MatchingNamesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+        //just checking that it compiles is enough, would not compile with override pointing to missing interface
+    }
+
+    @Test
     fun `should keep internal visibility when generating class or add public when omitted`() {
 
         val compilationResult = prepareCompilation(

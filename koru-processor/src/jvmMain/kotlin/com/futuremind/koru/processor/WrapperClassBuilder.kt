@@ -72,6 +72,22 @@ class WrapperClassBuilder(
         .build()
 
 
+    /**
+     * 1. Add generated standalone superinterfaces if they match the original superinterfaces.
+     * 2. Also add the interface generated from this class if it exists.
+     */
+    private val superInterfaces: List<GeneratedInterface> = originalTypeSpec.superinterfaces.keys
+        .toMutableList()
+        .apply { add(originalTypeName) }
+        .mapNotNull { interfaceName ->
+            when (val matchingSuper = generatedInterfaces[interfaceName]) {
+                null -> null
+                else -> matchingSuper
+            }
+        }
+
+    private val superInterfacesNames = superInterfaces.map { it.name }
+
     private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
@@ -132,7 +148,7 @@ class WrapperClassBuilder(
         fun TypeSpec.containsFunctionSignature() =
             this.funSpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
 
-        return generatedInterfaces.values.any { it.typeSpec.containsFunctionSignature() }
+        return superInterfaces.any { it.typeSpec.containsFunctionSignature() }
     }
 
     /**
@@ -147,23 +163,8 @@ class WrapperClassBuilder(
         fun TypeSpec.containsPropertySignature() =
             this.propertySpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
 
-        return generatedInterfaces.values.any { it.typeSpec.containsPropertySignature() }
+        return superInterfaces.any { it.typeSpec.containsPropertySignature() }
     }
-
-    /**
-     * 1. Add generated standalone superinterfaces if they match the original superinterfaces.
-     * 2. Also add the interface generated from this class if it exists.
-     */
-    private val superInterfaces: MutableList<TypeName> = originalTypeSpec.superinterfaces.keys
-        .toMutableList()
-        .apply { add(originalTypeName) }
-        .mapNotNull { interfaceName ->
-            when (val matchingSuper = generatedInterfaces[interfaceName]) {
-                null -> null
-                else -> matchingSuper.name
-            }
-        }
-        .toMutableList()
 
     //this could be simplified in the future, but for now: https://github.com/square/kotlinpoet/issues/966
     private fun FunSpec.Builder.setFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {
@@ -223,7 +224,7 @@ class WrapperClassBuilder(
     fun build(): TypeSpec = TypeSpec
         .classBuilder(newTypeName)
         .addModifiers(modifiers)
-        .addSuperinterfaces(superInterfaces)
+        .addSuperinterfaces(superInterfacesNames)
         .primaryConstructor(constructorSpec)
         .addFunction(secondaryConstructorSpec)
         .addProperty(wrappedClassPropertySpec)
