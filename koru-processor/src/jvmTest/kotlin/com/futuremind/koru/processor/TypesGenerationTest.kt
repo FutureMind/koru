@@ -501,6 +501,59 @@ class TypesGenerationTest {
     }
 
     @Test
+    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces2.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface FirstInterface {
+                                suspend fun firstFunction(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeInterface
+                            interface SecondInterface {
+                                suspend fun secondFunction(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeInterface
+                            interface ThirdInterface {
+                                suspend fun thirdFunction(whatever: Int) : Float = TODO()
+                            }
+                            
+                            @ToNativeClass
+                            class MultipleInterfacesExample : FirstInterface, SecondInterface {
+                                override suspend fun firstFunction(whatever: Int) : Float = TODO()
+                                override suspend fun secondFunction(whatever: Int) : Float = TODO()
+                                suspend fun fourthFunction(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
+            "com.futuremind.kmm101.test.FirstInterface$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.SecondInterface$defaultInterfaceNameSuffix",
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.ThirdInterface$defaultInterfaceNameSuffix"
+
+        generatedType.memberReturnType("firstFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("secondFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("fourthFunction") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+
+    }
+
+    @Test
     fun `should keep internal visibility when generating class or add public when omitted`() {
 
         val compilationResult = prepareCompilation(
