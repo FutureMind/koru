@@ -2,9 +2,7 @@ package com.futuremind.koru.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -379,7 +377,7 @@ class TypesGenerationTest {
     }
 
     @Test
-    fun `should not extend superinterface if it is not annotated (and thus should strip override annotation)`() {
+    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -426,6 +424,73 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.NotAnnotatedInterface$defaultInterfaceNameSuffix"
+        generatedType.supertypes.map { it.toString() } shouldContain "com.futuremind.kmm101.test.AnnotatedInterface$defaultInterfaceNameSuffix"
+
+        generatedType.memberReturnType("notAnnotatedVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("notAnnotatedFlowVal") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("notAnnotatedBlocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("notAnnotatedSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("notAnnotatedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
+        generatedType.memberReturnType("annotatedVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("annotatedFlowVal") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("annotatedBlocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("annotatedSuspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("annotatedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
+    }
+
+    @Test
+    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "notAnnotatedSuperInterface2.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+
+                            interface NotAnnotatedInterface<T: Any> {
+                                val notAnnotatedVal : T
+                                val notAnnotatedFlowVal : Flow<T>
+                                fun notAnnotatedBlocking(whatever: Int) : T = TODO()
+                                suspend fun notAnnotatedSuspending(whatever: Int) : T = TODO()
+                                fun notAnnotatedFlow(whatever: Int) : Flow<T> = TODO()
+                            }
+                            
+                            @ToNativeInterface
+                            interface AnnotatedInterface {
+                                val annotatedVal : Float
+                                val annotatedFlowVal : Flow<Float>
+                                fun annotatedBlocking(whatever: Int) : Float = TODO()
+                                suspend fun annotatedSuspending(whatever: Int) : Float = TODO()
+                                fun annotatedFlow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                            
+                            @ToNativeInterface
+                            class SuperInterfacesExample : NotAnnotatedInterface<Float>, AnnotatedInterface {
+                                override val notAnnotatedVal : Float = TODO()
+                                override val notAnnotatedFlowVal : Flow<Float> = TODO()
+                                override fun notAnnotatedBlocking(whatever: Int) : Float = TODO()
+                                override suspend fun notAnnotatedSuspending(whatever: Int) : Float = TODO()
+                                override fun notAnnotatedFlow(whatever: Int) : Flow<Float> = TODO()
+
+                                override val annotatedVal : Float = TODO()
+                                override val annotatedFlowVal : Flow<Float> = TODO()
+                                override fun annotatedBlocking(whatever: Int) : Float = TODO()
+                                override suspend fun annotatedSuspending(whatever: Int) : Float = TODO()
+                                override fun annotatedFlow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultInterfaceNameSuffix",
             tempDir = tempDir
         )
 
@@ -576,8 +641,8 @@ class TypesGenerationTest {
                             @ToNativeInterface
                             interface D : C, A {
                                 suspend fun d(whatever: Int) : Float
-                                override suspend fun b(whatever: Int) : Float
                                 override suspend fun a(whatever: Int) : Float
+                                override suspend fun b(whatever: Int) : Float
                                 override suspend fun c(whatever: Int) : Float
                             }
 
@@ -603,9 +668,99 @@ class TypesGenerationTest {
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
+        )
+
+        //Z is inherited directly but not annotated
+        //B and C are not inherited directly, their methods will be generated but superinterfaces will not contain them explicitly (TODO test if that's true)
+        generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
+            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
+        )
+
+    }
+
+    //TODO the unannotated Y interface ruins it for now, we should explicitly prohibit that
+    @Test
+    fun `should generate complex inheritance hierarchy TODO`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces4.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface A : Y {
+                                suspend fun a(whatever: Int) : Float
+                                override fun y(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface B {
+                                suspend fun b(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface C : B {
+                                suspend fun c(whatever: Int) : Float
+                                override suspend fun b(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface D : C, A {
+                                suspend fun d(whatever: Int) : Float
+                                override suspend fun a(whatever: Int) : Float
+                                override suspend fun b(whatever: Int) : Float
+                                override suspend fun c(whatever: Int) : Float
+                                override suspend fun y(whatever: Int) : Float
+                            }
+
+                            interface Y {
+                                suspend fun y(whatever: Int) : Float
+                            }
+
+                            interface Z {
+                                suspend fun z(whatever: Int) : Float
+                            }
+                            
+                            @ToNativeClass
+                            @ToNativeInterface
+                            class MultipleInterfacesExample : A, D, Z {
+                                override suspend fun a(whatever: Int) : Float = TODO()
+                                override suspend fun b(whatever: Int) : Float = TODO()
+                                override suspend fun c(whatever: Int) : Float = TODO()
+                                override suspend fun d(whatever: Int) : Float = TODO()
+                                suspend fun e(whatever: Int) : Float = TODO()
+                                override suspend fun y(whatever: Int) : Float = TODO()
+                                override suspend fun z(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainExactly listOf(
+            "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
+        )
+
+        //Z is inherited directly but not annotated
+        //B&C are not inherited directly
+        //Y is inherited
+        generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
+            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
         )
 
     }

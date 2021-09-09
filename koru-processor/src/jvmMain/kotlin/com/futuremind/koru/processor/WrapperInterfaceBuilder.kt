@@ -17,9 +17,10 @@ class WrapperInterfaceBuilder(
                 .clearBody()
                 .setReturnType(originalFuncSpec)
                 .apply {
-                    modifiers.remove(KModifier.SUSPEND)
                     modifiers.add(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.SUSPEND)
                 }
+                .setupOverrideModifier(originalFuncSpec)
                 .build()
         }
 
@@ -32,14 +33,10 @@ class WrapperInterfaceBuilder(
                     type = originalPropertySpec.wrappedType
                 )
                 .mutable(false)
-                .apply {
-                    modifiers.add(KModifier.ABSTRACT)
-                }
+                .apply { modifiers.add(KModifier.ABSTRACT) }
+                .setupOverrideModifier(originalPropertySpec)
                 .build()
         }
-
-
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers()
 
     fun build(): TypeSpec = TypeSpec
         .interfaceBuilder(newTypeName)
