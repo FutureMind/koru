@@ -545,6 +545,72 @@ class TypesGenerationTest {
     }
 
     @Test
+    fun `should generate complex inheritance hierarchy`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces3.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface A {
+                                suspend fun a(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface B {
+                                suspend fun b(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface C : B {
+                                suspend fun c(whatever: Int) : Float
+                                override suspend fun b(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface D : C, A {
+                                suspend fun d(whatever: Int) : Float
+                                override suspend fun b(whatever: Int) : Float
+                                override suspend fun a(whatever: Int) : Float
+                                override suspend fun c(whatever: Int) : Float
+                            }
+
+                            interface Z {
+                                suspend fun z(whatever: Int) : Float
+                            }
+                            
+                            @ToNativeClass
+                            @ToNativeInterface
+                            class MultipleInterfacesExample : A, D, Z {
+                                override suspend fun a(whatever: Int) : Float = TODO()
+                                override suspend fun b(whatever: Int) : Float = TODO()
+                                override suspend fun c(whatever: Int) : Float = TODO()
+                                override suspend fun d(whatever: Int) : Float = TODO()
+                                suspend fun e(whatever: Int) : Float = TODO()
+                                override suspend fun z(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
+            "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
+        )
+
+    }
+
+    @Test
     fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`() {
 
         val generatedType = compileAndReturnGeneratedClass(

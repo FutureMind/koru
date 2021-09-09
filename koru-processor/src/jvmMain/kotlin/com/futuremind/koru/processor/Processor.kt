@@ -59,6 +59,7 @@ class Processor : AbstractProcessor() {
         val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterface>()
 
         roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
+            .sortedBy { it.getClassName(processingEnv).simpleName } //TODO temp - just to iron out one of the issues with override annotations when generating interfaces
             .forEach { element ->
                 val (typeName, generatedInterface) = generateInterface(
                     element = element,
@@ -66,6 +67,7 @@ class Processor : AbstractProcessor() {
                     generatedInterfaces = generatedInterfaces,
                     targetDir = kaptGeneratedDir
                 )
+                println("Generated: ${generatedInterface.name} from $typeName")
                 generatedInterfaces[typeName] = generatedInterface
             }
 
