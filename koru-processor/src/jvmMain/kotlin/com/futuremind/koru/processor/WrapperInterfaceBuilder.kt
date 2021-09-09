@@ -1,14 +1,14 @@
 package com.futuremind.koru.processor
 
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.*
 
 
 class WrapperInterfaceBuilder(
+    originalTypeName: ClassName,
+    originalTypeSpec: TypeSpec,
     private val newTypeName: String,
-    originalTypeSpec: TypeSpec
-) {
+    generatedInterfaces: Map<TypeName, GeneratedInterface>,
+) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
@@ -39,14 +39,12 @@ class WrapperInterfaceBuilder(
         }
 
 
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
-        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
-        it.ifEmpty { setOf(KModifier.PUBLIC) }
-    }
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers()
 
     fun build(): TypeSpec = TypeSpec
         .interfaceBuilder(newTypeName)
         .addModifiers(modifiers)
+        .addSuperinterfaces(superInterfacesNames)
         .addFunctions(functions)
         .addProperties(properties)
         .build()

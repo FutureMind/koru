@@ -29,7 +29,7 @@ fun compileAndReturnGeneratedClass(
     tempDir: File
 ): KClass<out Any> {
     val compilationResult = prepareCompilation(source, tempDir).compile()
-//    debugPrintGenerated(compilationResult)
+    debugPrintGenerated(compilationResult)
     val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
     compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
     return generatedClass.kotlin

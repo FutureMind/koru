@@ -9,11 +9,11 @@ import com.squareup.kotlinpoet.*
 class WrapperClassBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
+    generatedInterfaces: Map<TypeName, GeneratedInterface>,
     private val newTypeName: String,
-    private val generatedInterfaces: Map<TypeName, GeneratedInterface>,
     private val scopeProviderMemberName: MemberName?,
     private val freezeWrapper: Boolean
-) {
+) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     companion object {
         private const val WRAPPED_PROPERTY_NAME = "wrapped"
@@ -71,23 +71,6 @@ class WrapperClassBuilder(
         .addModifiers(KModifier.PRIVATE)
         .build()
 
-
-    /**
-     * 1. Add generated standalone superinterfaces if they match the original superinterfaces.
-     * 2. Also add the interface generated from this class if it exists.
-     */
-    private val superInterfaces: List<GeneratedInterface> = originalTypeSpec.superinterfaces.keys
-        .toMutableList()
-        .apply { add(originalTypeName) }
-        .mapNotNull { interfaceName ->
-            when (val matchingSuper = generatedInterfaces[interfaceName]) {
-                null -> null
-                else -> matchingSuper
-            }
-        }
-
-    private val superInterfacesNames = superInterfaces.map { it.name }
-
     private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
@@ -130,10 +113,7 @@ class WrapperClassBuilder(
                 .build()
         }
 
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
-        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
-        it.ifEmpty { setOf(KModifier.PUBLIC) }
-    }
+    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers()
 
     /**
      * if we have an interface generated based on class signature, we need to add the override

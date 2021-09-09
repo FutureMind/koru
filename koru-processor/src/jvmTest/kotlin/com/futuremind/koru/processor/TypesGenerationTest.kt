@@ -501,6 +501,50 @@ class TypesGenerationTest {
     }
 
     @Test
+    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces2.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            interface FirstInterface {
+                                suspend fun firstFunction(whatever: Int) : Float = TODO()
+                            }
+
+                            @ToNativeInterface
+                            interface SecondInterface {
+                                suspend fun secondFunction(whatever: Int) : Float = TODO()
+                            }
+                            
+                            @ToNativeClass
+                            @ToNativeInterface
+                            class MultipleInterfacesExample : FirstInterface, SecondInterface {
+                                override suspend fun firstFunction(whatever: Int) : Float = TODO()
+                                override suspend fun secondFunction(whatever: Int) : Float = TODO()
+                                suspend fun thirdFunction(whatever: Int) : Float = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
+            "com.futuremind.kmm101.test.FirstInterface$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.SecondInterface$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
+        )
+
+    }
+
+    @Test
     fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
