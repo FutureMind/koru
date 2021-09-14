@@ -610,7 +610,7 @@ class TypesGenerationTest {
     }
 
     @Test
-    fun `should generate complex inheritance hierarchy`() {
+    fun `should generate complex inheritance hierarchy (without @ToNativeInterface on class)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -623,7 +623,7 @@ class TypesGenerationTest {
                             import kotlinx.coroutines.flow.Flow
                             
                             @ToNativeInterface
-                            interface A {
+                            interface A : Y {
                                 suspend fun a(whatever: Int) : Float
                             }
 
@@ -644,6 +644,11 @@ class TypesGenerationTest {
                                 override suspend fun a(whatever: Int) : Float
                                 override suspend fun b(whatever: Int) : Float
                                 override suspend fun c(whatever: Int) : Float
+                                override suspend fun y(whatever: Int) : Float
+                            }
+
+                            interface Y {
+                                suspend fun y(whatever: Int) : Float
                             }
 
                             interface Z {
@@ -651,13 +656,13 @@ class TypesGenerationTest {
                             }
                             
                             @ToNativeClass
-                            @ToNativeInterface
                             class MultipleInterfacesExample : A, D, Z {
                                 override suspend fun a(whatever: Int) : Float = TODO()
                                 override suspend fun b(whatever: Int) : Float = TODO()
                                 override suspend fun c(whatever: Int) : Float = TODO()
                                 override suspend fun d(whatever: Int) : Float = TODO()
                                 suspend fun e(whatever: Int) : Float = TODO()
+                                override suspend fun y(whatever: Int) : Float = TODO()
                                 override suspend fun z(whatever: Int) : Float = TODO()
                             }
                         """
@@ -669,26 +674,28 @@ class TypesGenerationTest {
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
         )
 
         //Z is inherited directly but not annotated
-        //B and C are not inherited directly, their methods will be generated but superinterfaces will not contain them explicitly (TODO test if that's true)
+        //B and C are not inherited directly
+        //Y is not annotated and is only inherited indirectly, via A
+        //MultipleInterfacesExample is not annotated
         generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
             "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.Y$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
         )
 
     }
 
-    //TODO the unannotated Y interface ruins it for now, we should explicitly prohibit that
     @Test
-    fun `should generate complex inheritance hierarchy TODO`() {
+    fun `should generate complex inheritance hierarchy (with @ToNativeInterface on class)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
-                "multipleSuperInterfaces4.kt",
+                "multipleSuperInterfaces3.kt",
                 """
                             package com.futuremind.kmm101.test
                             
@@ -699,7 +706,6 @@ class TypesGenerationTest {
                             @ToNativeInterface
                             interface A : Y {
                                 suspend fun a(whatever: Int) : Float
-                                override fun y(whatever: Int) : Float
                             }
 
                             @ToNativeInterface
@@ -747,20 +753,20 @@ class TypesGenerationTest {
             tempDir = tempDir
         )
 
-        generatedType.supertypes.map { it.toString() } shouldContainExactly listOf(
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
         )
 
         //Z is inherited directly but not annotated
-        //B&C are not inherited directly
-        //Y is inherited
+        //B and C are not inherited directly
+        //Y is not annotated and is only inherited indirectly, via A
         generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
             "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.Y$defaultInterfaceNameSuffix",
         )
 
     }
