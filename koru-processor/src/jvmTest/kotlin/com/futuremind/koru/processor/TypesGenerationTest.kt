@@ -690,8 +690,9 @@ class TypesGenerationTest {
 
     }
 
+    //TODO red
     @Test
-    fun `should generate complex inheritance hierarchy (with @ToNativeInterface on class)`() {
+    fun `should generate interfaces in the right order so that they can depend on each other regardless of the order the annotations are read`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -702,10 +703,11 @@ class TypesGenerationTest {
                             import com.futuremind.koru.ToNativeClass
                             import com.futuremind.koru.ToNativeInterface
                             import kotlinx.coroutines.flow.Flow
-                            
+
                             @ToNativeInterface
-                            interface A : Y {
+                            interface A : C {
                                 suspend fun a(whatever: Int) : Float
+                                override suspend fun c(whatever: Int): Float
                             }
 
                             @ToNativeInterface
@@ -721,52 +723,24 @@ class TypesGenerationTest {
 
                             @ToNativeInterface
                             interface D : C, A {
-                                suspend fun d(whatever: Int) : Float
                                 override suspend fun a(whatever: Int) : Float
                                 override suspend fun b(whatever: Int) : Float
                                 override suspend fun c(whatever: Int) : Float
-                                override suspend fun y(whatever: Int) : Float
+                                suspend fun d(whatever: Int) : Float
                             }
 
-                            interface Y {
-                                suspend fun y(whatever: Int) : Float
-                            }
-
-                            interface Z {
-                                suspend fun z(whatever: Int) : Float
-                            }
-                            
-                            @ToNativeClass
-                            @ToNativeInterface
-                            class MultipleInterfacesExample : A, D, Z {
-                                override suspend fun a(whatever: Int) : Float = TODO()
-                                override suspend fun b(whatever: Int) : Float = TODO()
-                                override suspend fun c(whatever: Int) : Float = TODO()
-                                override suspend fun d(whatever: Int) : Float = TODO()
-                                suspend fun e(whatever: Int) : Float = TODO()
-                                override suspend fun y(whatever: Int) : Float = TODO()
-                                override suspend fun z(whatever: Int) : Float = TODO()
-                            }
                         """
             ),
-            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
             tempDir = tempDir
         )
 
+        //this might result in flaky false positives, but in my tests, without proper ordering,
+        //the ANativeProtocol is generated last, so the test will fail, because DNativeProtocol
+        //will not take it into account when listing its superinterfaces
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
-        )
-
-        //Z is inherited directly but not annotated
-        //B and C are not inherited directly
-        //Y is not annotated and is only inherited indirectly, via A
-        generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
-            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.Y$defaultInterfaceNameSuffix",
         )
 
     }
