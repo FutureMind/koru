@@ -20,7 +20,14 @@ internal class InheritanceSortTest {
             listOf(a, b, c, d, e, f)
         )
 
-        graph.addEdge(c, a)
+        graph.addEdge(a, c) //eg class C : A
+        graph.addEdge(a, d)
+        graph.addEdge(a, e)
+        graph.addEdge(c, e)
+        graph.addEdge(b, e)
+        graph.addEdge(b, d)
+        graph.addEdge(b, f)
+        graph.addEdge(d, f)
 
         println("Order: ${graph.topologicalOrder().map { it.element }}")
 

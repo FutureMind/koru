@@ -59,39 +59,33 @@ class Graph<E, D>(
         adjacencyMap[from]!!.add(to)
     }
 
-//    fun addEdge(from: D, to: D) {
-//        adjacencyMap[from]!!.add(to)
-//    }
-
     fun topologicalOrder(): List<Vertex<E, D>> {
 
         var visitedNodes = 0
         val queue: Queue<Vertex<E, D>> = LinkedList()
         val orderedList = mutableListOf<Vertex<E, D>>()
 
-//        vertices.forEach { vertex ->
-//            vertex.outgoingEdgesDescriptors.forEach {
-//                if (vertex.descriptor == it) vertex.inDegree++
-//            }
-//        }
+        vertices.forEach { vertex ->
+            adjacencyMap[vertex]!!.forEach { it.inDegree++ }
+        }
 
         vertices.forEach { vertex ->
             if (vertex.inDegree == 0) queue.add(vertex)
         }
 
         while (!queue.isEmpty()) {
+            println("Queue: ${queue.map { "${it.descriptor}"  }}")
             val vertex = queue.remove()
             orderedList.add(vertex)
             visitedNodes++
-            println("${vertex.descriptor} has incoming ${adjacencyMap[vertex]}")
-//            vertex.outgoingEdgesDescriptors.forEach { descriptor ->
-//                vertices.find { it.descriptor == descriptor }!!.apply {
-//                    println("${this.descriptor} incoming to ${vertex.descriptor}")
-//                    inDegree--
-//                    if (inDegree == 0) queue.add(this)
-//                }
-//            }
+            println("${vertex.descriptor} has incoming ${adjacencyMap[vertex]!!.map { it.descriptor }}")
+            adjacencyMap[vertex]!!.forEach {
+                it.inDegree--
+                if (it.inDegree == 0) queue.add(it)
+            }
         }
+
+        if(visitedNodes != vertices.size) throw IllegalArgumentException("The graph contains cycles")
 
         return orderedList
 
