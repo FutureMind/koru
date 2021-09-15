@@ -9,22 +9,24 @@ internal class InheritanceSortTest {
     @Test
     fun abc() {
 
+        val a = vertex(A)
+        val b = vertex(B)
+        val c = vertex(C)
+        val d = vertex(D)
+        val e = vertex(E)
+        val f = vertex(F)
+
         val graph = Graph(
-            listOf(
-                vertex(A),
-                vertex(B),
-                vertex(C, setOf(A)),
-                vertex(D, setOf(A, B)),
-                vertex(E, setOf(A, B, C)),
-                vertex(F, setOf(D, B)),
-            )
+            listOf(a, b, c, d, e, f)
         )
+
+        graph.addEdge(c, a)
 
         println("Order: ${graph.topologicalOrder().map { it.element }}")
 
     }
 
-    private fun vertex(letter: Ver, incomingEdges: Set<Ver> = setOf()) = Vertex(letter, letter, incomingEdges)
+    private fun vertex(letter: Ver) = Vertex(letter, letter)
 
     enum class Ver {
         A,B,C,D,E,F
