@@ -26,12 +26,7 @@ internal fun Collection<Element>.sortByInheritance(
 
     val vertices = this.map { element ->
         val name = element.getClassName(processingEnv) as TypeName
-        val clazz = (element as TypeElement).toImmutableKmClass()
-        Vertex<Element, TypeName>(
-            element,
-            name,
-//            clazz.toTypeSpec(classInspector).superinterfaces.keys
-        )
+        Vertex(element, name)
     }
 
     val graph = Graph(vertices)
@@ -40,8 +35,8 @@ internal fun Collection<Element>.sortByInheritance(
         val superInterfacesNames = (vertex.element as TypeElement).toImmutableKmClass()
             .toTypeSpec(classInspector).superinterfaces.keys
         superInterfacesNames.forEach { name ->
-            val from = vertices.find { it.descriptor == name }!!
-            graph.addEdge(from, vertex)
+            val from = vertices.find { it.descriptor == name }
+            from?.let { graph.addEdge(from, vertex) }
         }
     }
 

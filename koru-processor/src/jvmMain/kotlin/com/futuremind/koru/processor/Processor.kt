@@ -86,6 +86,7 @@ class Processor : AbstractProcessor() {
         true
 
     } catch (e: Throwable) {
+        e.printStackTrace()
         processingEnv.messager.printMessage(ERROR, "${e::class.simpleName}: ${e.message}")
         false
     }
