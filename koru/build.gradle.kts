@@ -6,10 +6,6 @@ plugins {
     id("org.jetbrains.dokka") version "1.4.32"
 }
 
-repositories {
-    mavenCentral()
-}
-
 kotlin {
 
     jvm()

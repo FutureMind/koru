@@ -11,5 +11,11 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
 group = "com.futuremind"
 version = "0.8.0"
