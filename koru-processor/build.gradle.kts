@@ -10,10 +10,6 @@ plugins {
     id("org.jetbrains.dokka") version "1.4.32"
 }
 
-repositories {
-    mavenCentral()
-}
-
 kotlin {
 
     //this is only used as kapt (annotation processor, so pure jvm)
