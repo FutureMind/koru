@@ -10,10 +10,6 @@ plugins {
     id("org.jetbrains.dokka") version "1.4.32"
 }
 
-repositories {
-    mavenCentral()
-}
-
 kotlin {
 
     //this is only used as kapt (annotation processor, so pure jvm)
@@ -32,13 +28,13 @@ kotlin {
                 implementation(project(":koru"))
 
                 //code generation
-                val kotlinpoetVersion = "1.8.0"
+                val kotlinpoetVersion = "1.9.0"
                 implementation("com.squareup:kotlinpoet:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata-specs:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-classinspector-elements:$kotlinpoetVersion")
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
             }
         }
 

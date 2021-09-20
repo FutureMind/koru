@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.9.0] - 2021-09-20
+### Added
+- Support for Apple Silicon targets introduced in Kotlin 1.5.30.
+
 ## [0.8.0] - 2021-09-06
 ### Fixed
 - The generated classes now only extend annotated interfaces. Methods and vals of non-annotated interfaces are still wrapped, but not inherited from.  
