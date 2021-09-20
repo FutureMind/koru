@@ -6,7 +6,7 @@ Automatically generates wrappers for `suspend` functions and `Flow` for easy acc
 
 Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
-**Note**: this library is in alpha state - the API may change.
+**Note**: this library is in beta state - the API should be mostly stable but there might be minor changes.
 
 ## Getting started
 
@@ -226,7 +226,7 @@ You can consume the coroutine wrappers directly as callbacks. But if you are wor
 Then, you can call them like this:
 
 ```swift
-createPublisher(wrapper: loadUserUseCase.loadUser(username: "noone special"))
+createPublisher(wrapper: loadUserUseCase.loadUser(username: "Bob"))
     .sink(
         receiveCompletion: { completion in print("Completion: \(completion)") },
         receiveValue: { user in print("Hello from the Kotlin side \(user?.name)") }
@@ -260,10 +260,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.8.0")
+                implementation("com.futuremind:koru:0.9.0")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.8.0"
+                        "com.futuremind", "koru-processor", "0.9.0"
                     )
                 )
 
