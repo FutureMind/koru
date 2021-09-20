@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     kotlin("multiplatform")
     id("java-library")
@@ -68,6 +70,8 @@ kotlin {
 
 publishing {
 
+    val localProperties = gradleLocalProperties(rootProject.projectDir)
+
     publications.all {
         version = rootProject.version
         group = rootProject.group
@@ -108,8 +112,8 @@ publishing {
                 }
             )
             credentials {
-                username = project.properties["sonatypeUsername"] as String?
-                password = project.properties["sonatypePassword"] as String?
+                username = localProperties["sonatypeUsername"] as String?
+                password = localProperties["sonatypePassword"] as String?
             }
         }
     }
