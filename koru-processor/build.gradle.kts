@@ -6,12 +6,7 @@ plugins {
     kotlin("multiplatform")
     id("java-library")
     id("maven-publish")
-    id("signing")
-    id("org.jetbrains.dokka") version "1.4.32"
-}
-
-repositories {
-    mavenCentral()
+    id("com.futuremind.koru.publish")
 }
 
 kotlin {
@@ -24,6 +19,7 @@ kotlin {
             }
         }
     }
+
     sourceSets {
 
         val jvmMain by getting {
@@ -32,13 +28,13 @@ kotlin {
                 implementation(project(":koru"))
 
                 //code generation
-                val kotlinpoetVersion = "1.8.0"
+                val kotlinpoetVersion = "1.9.0"
                 implementation("com.squareup:kotlinpoet:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata-specs:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-classinspector-elements:$kotlinpoetVersion")
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
             }
         }
 
@@ -54,90 +50,12 @@ kotlin {
     }
 }
 
-publishing {
-
-    publications.all {
-        version = rootProject.version
-        group = rootProject.group
-    }
-
-    publications.withType<MavenPublication> {
-        pom {
-            name.set("Koru - Processor")
-            description.set("Wrappers for suspend functions / Flow in Kotlin Native - annotation processor.")
-            url.set("https://github.com/FutureMind/koru")
-            licenses {
-                license {
-                    name.set("The MIT License")
-                    url.set("https://opensource.org/licenses/MIT")
-                }
-            }
-            developers {
-                developer {
-                    id.set("mklimczak")
-                    name.set("Michał Klimczak")
-                    email.set("m.klimczak@futuremind.com")
-                }
-            }
-            scm {
-                url.set("https://github.com/FutureMind/koru")
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "Sonatype_OSS"
-            url = uri(
-                if (version.toString().endsWith("SNAPSHOT")) {
-                    "https://oss.sonatype.org/content/repositories/snapshots"
-                } else {
-                    "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                }
-            )
-            credentials {
-                username = project.properties["sonatypeUsername"] as String?
-                password = project.properties["sonatypePassword"] as String?
-            }
-        }
-    }
+koruPublishing {
+    pomName = "Koru - Processor"
+    pomDescription = "Wrappers for suspend functions / Flow in Kotlin Native - annotation processor."
 }
 
 //otherwise junit5 tests cannot be run from jvmTest
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-// Create javadocs and attach to maven publication
-tasks {
-    dokkaJavadoc {
-        outputDirectory.set(project.rootProject.file("$buildDir/dokka"))
-    }
-}
-val javadocJar by tasks.creating(Jar::class) {
-    val dokkaTask = tasks.getByName<org.jetbrains.dokka.gradle.DokkaTask>("dokkaJavadoc")
-    from(dokkaTask.outputDirectory)
-    dependsOn(dokkaTask)
-    dependsOn("build")
-    archiveClassifier.value("javadoc")
-}
-publishing {
-    publications.withType<MavenPublication>().all {
-        artifact(javadocJar)
-    }
-}
-
-/*
-Sign all artifacts
-Requires following properties to be set in gradle.properties
-signing.keyId=
-signing.password=
-signing.secretKeyRingFile=
- */
-publishing {
-    publications.withType<MavenPublication>().all {
-        signing {
-            sign(this@all)
-        }
-    }
 }

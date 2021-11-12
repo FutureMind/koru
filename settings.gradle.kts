@@ -9,5 +9,6 @@ pluginManagement {
 }
 rootProject.name = "Koru"
 
+includeBuild("gradlePlugins")
 include(":koru")
 include(":koru-processor")
