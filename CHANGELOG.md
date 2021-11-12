@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.10.0] - 2021-11-12
+### Added
+- Support for generating complex inheritance hierarchies (see [#39](https://github.com/FutureMind/koru/issues/39) for details)
+
 ## [0.9.0] - 2021-09-20
 ### Added
 - Support for Apple Silicon targets introduced in Kotlin 1.5.30.
