@@ -61,11 +61,9 @@ internal class Graph<E, D>(
         }
 
         while (!queue.isEmpty()) {
-            println("Queue: ${queue.map { "${it.descriptor}"  }}")
             val vertex = queue.remove()
             orderedList.add(vertex)
             visitedNodes++
-            println("${vertex.descriptor} has incoming ${adjacencyMap[vertex]!!.map { it.descriptor }}")
             adjacencyMap[vertex]!!.forEach {
                 it.inDegree--
                 if (it.inDegree == 0) queue.add(it)

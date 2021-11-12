@@ -3,6 +3,7 @@ package com.futuremind.koru.processor
 import com.futuremind.koru.processor.InheritanceSortTest.Ver.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.lang.IllegalArgumentException
 
 internal class InheritanceSortTest {
 
@@ -58,6 +59,24 @@ internal class InheritanceSortTest {
             expectedSorted = listOf(a, b, c, d, e, f)
         )
 
+    }
+
+    @Test
+    fun `should throw on cyclic graph`() {
+        val graph = Graph(listOf(a, b))
+        graph.addEdge(a, b)
+        graph.addEdge(b, a)
+        assertThrows(IllegalArgumentException::class.java) { graph.topologicalOrder() }
+    }
+
+    @Test
+    fun `should throw on cyclic graph (larger)`() {
+        val graph = Graph(listOf(a, b, c, d))
+        graph.addEdge(a, b)
+        graph.addEdge(b, c)
+        graph.addEdge(c, d)
+        graph.addEdge(d, a)
+        assertThrows(IllegalArgumentException::class.java) { graph.topologicalOrder() }
     }
 
     private fun test(

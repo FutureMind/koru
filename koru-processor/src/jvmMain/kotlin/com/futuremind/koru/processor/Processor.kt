@@ -67,7 +67,6 @@ class Processor : AbstractProcessor() {
                     generatedInterfaces = generatedInterfaces,
                     targetDir = kaptGeneratedDir
                 )
-                println("Generated: ${generatedInterface.name} from $typeName")
                 generatedInterfaces[typeName] = generatedInterface
             }
 
