@@ -9,11 +9,11 @@ import com.squareup.kotlinpoet.*
 class WrapperClassBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
+    generatedInterfaces: Map<TypeName, GeneratedInterface>,
     private val newTypeName: String,
-    private val generatedInterfaces: Map<TypeName, GeneratedInterface>,
     private val scopeProviderMemberName: MemberName?,
     private val freezeWrapper: Boolean
-) {
+) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     companion object {
         private const val WRAPPED_PROPERTY_NAME = "wrapped"
@@ -71,23 +71,6 @@ class WrapperClassBuilder(
         .addModifiers(KModifier.PRIVATE)
         .build()
 
-
-    /**
-     * 1. Add generated standalone superinterfaces if they match the original superinterfaces.
-     * 2. Also add the interface generated from this class if it exists.
-     */
-    private val superInterfaces: List<GeneratedInterface> = originalTypeSpec.superinterfaces.keys
-        .toMutableList()
-        .apply { add(originalTypeName) }
-        .mapNotNull { interfaceName ->
-            when (val matchingSuper = generatedInterfaces[interfaceName]) {
-                null -> null
-                else -> matchingSuper
-            }
-        }
-
-    private val superInterfacesNames = superInterfaces.map { it.name }
-
     private val functions = originalTypeSpec.funSpecs
         .filter { !it.modifiers.contains(KModifier.PRIVATE) }
         .map { originalFuncSpec ->
@@ -95,13 +78,10 @@ class WrapperClassBuilder(
                 .clearBody()
                 .setFunctionBody(originalFuncSpec)
                 .setReturnType(originalFuncSpec)
+                .setupOverrideModifier(originalFuncSpec)
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
-                    modifiers.remove(KModifier.ABSTRACT) //when we create class, we always wrap into a concrete impl
-                    when (originalFuncSpec.overridesGeneratedInterface()) {
-                        true -> this.modifiers.add(KModifier.OVERRIDE)
-                        false -> this.modifiers.remove(KModifier.OVERRIDE)
-                    }
+                    modifiers.remove(KModifier.ABSTRACT)
                 }
                 .build()
         }
@@ -120,51 +100,10 @@ class WrapperClassBuilder(
                         .build()
                 )
                 .mutable(false)
-                .apply {
-                    modifiers.remove(KModifier.ABSTRACT)
-                    when (originalPropertySpec.overridesGeneratedInterface()) {
-                        true -> this.modifiers.add(KModifier.OVERRIDE)
-                        false -> this.modifiers.remove(KModifier.OVERRIDE)
-                    }
-                }
+                .setupOverrideModifier(originalPropertySpec)
+                .apply { modifiers.remove(KModifier.ABSTRACT) }
                 .build()
         }
-
-    private val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
-        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
-        it.ifEmpty { setOf(KModifier.PUBLIC) }
-    }
-
-    /**
-     * if we have an interface generated based on class signature, we need to add the override
-     * modifier to its methods explicitly
-     */
-    private fun FunSpec.overridesGeneratedInterface(): Boolean {
-
-        //not comparing types because we're comparing koru-wrapped interface with original
-        fun FunSpec.hasSameSignature(other: FunSpec) =
-            this.name == other.name && this.parameters == other.parameters
-
-        fun TypeSpec.containsFunctionSignature() =
-            this.funSpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
-
-        return superInterfaces.any { it.typeSpec.containsFunctionSignature() }
-    }
-
-    /**
-     * if we have an interface generated based on class signature, we need to add the override
-     * modifier to its properties explicitly.
-     */
-    private fun PropertySpec.overridesGeneratedInterface(): Boolean {
-
-        //not comparing types because we're comparing koru-wrapped interface with original
-        fun PropertySpec.hasSameSignature(other: PropertySpec) = this.name == other.name
-
-        fun TypeSpec.containsPropertySignature() =
-            this.propertySpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
-
-        return superInterfaces.any { it.typeSpec.containsPropertySignature() }
-    }
 
     //this could be simplified in the future, but for now: https://github.com/square/kotlinpoet/issues/966
     private fun FunSpec.Builder.setFunctionBody(originalFunSpec: FunSpec): FunSpec.Builder = when {

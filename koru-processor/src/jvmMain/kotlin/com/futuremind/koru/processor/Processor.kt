@@ -56,15 +56,19 @@ class Processor : AbstractProcessor() {
             }
             .toMap()
 
-        val generatedInterfaces = roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
-            .map { element ->
-                generateInterface(
+        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterface>()
+
+        roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
+            .sortByInheritance(classInspector, processingEnv)
+            .forEach { element ->
+                val (typeName, generatedInterface) = generateInterface(
                     element = element,
                     classInspector = classInspector,
+                    generatedInterfaces = generatedInterfaces,
                     targetDir = kaptGeneratedDir
                 )
+                generatedInterfaces[typeName] = generatedInterface
             }
-            .toMap()
 
         roundEnv.getElementsAnnotatedWith(ToNativeClass::class.java)
             .forEach { element ->
@@ -80,6 +84,7 @@ class Processor : AbstractProcessor() {
         true
 
     } catch (e: Throwable) {
+        e.printStackTrace()
         processingEnv.messager.printMessage(ERROR, "${e::class.simpleName}: ${e.message}")
         false
     }
@@ -115,6 +120,7 @@ class Processor : AbstractProcessor() {
     private fun generateInterface(
         element: Element,
         classInspector: ClassInspector,
+        generatedInterfaces: Map<TypeName, GeneratedInterface>,
         targetDir: String
     ): Pair<TypeName, GeneratedInterface> {
 
@@ -123,7 +129,8 @@ class Processor : AbstractProcessor() {
         val annotation = element.getAnnotation(ToNativeInterface::class.java)
         val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
 
-        val generatedType = WrapperInterfaceBuilder(newTypeName, typeSpec).build()
+        val generatedType =
+            WrapperInterfaceBuilder(typeName, typeSpec, newTypeName, generatedInterfaces).build()
 
         FileSpec.builder(typeName.packageName, newTypeName)
             .addType(generatedType)
@@ -187,24 +194,18 @@ class Processor : AbstractProcessor() {
         ) {
             throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
         }
-      return scopeProviders[typeMirror?.asTypeName()]?.let {
-          MemberName(
-              packageName = (typeMirror?.asTypeName() as ClassName).packageName,
-              simpleName = it.name
-          )
-      }
+        return scopeProviders[typeMirror?.asTypeName()]?.let {
+            MemberName(
+                packageName = (typeMirror?.asTypeName() as ClassName).packageName,
+                simpleName = it.name
+            )
+        }
     }
 
     private fun String.nonEmptyOr(or: String) = when (this.isEmpty()) {
         true -> or
         false -> this
     }
-
-    private fun Element.getPackage(processingEnv: ProcessingEnvironment) =
-        processingEnv.elementUtils.getPackageOf(this).toString()
-
-    private fun Element.getClassName(processingEnv: ProcessingEnvironment) =
-        ClassName(this.getPackage(processingEnv), this.simpleName.toString())
 
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
@@ -213,5 +214,11 @@ class Processor : AbstractProcessor() {
     }
 
 }
+
+internal fun Element.getPackage(processingEnv: ProcessingEnvironment) =
+    processingEnv.elementUtils.getPackageOf(this).toString()
+
+internal fun Element.getClassName(processingEnv: ProcessingEnvironment) =
+    ClassName(this.getPackage(processingEnv), this.simpleName.toString())
 
 data class GeneratedInterface(val name: TypeName, val typeSpec: TypeSpec)
