@@ -60,6 +60,7 @@ class Processor : AbstractProcessor() {
 
         roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
             .sortedBy { it.getClassName(processingEnv).simpleName } //TODO temp - just to iron out one of the issues with override annotations when generating interfaces
+//            .sortByInheritance(classInspector, processingEnv)
             .forEach { element ->
                 val (typeName, generatedInterface) = generateInterface(
                     element = element,
@@ -85,6 +86,7 @@ class Processor : AbstractProcessor() {
         true
 
     } catch (e: Throwable) {
+        e.printStackTrace()
         processingEnv.messager.printMessage(ERROR, "${e::class.simpleName}: ${e.message}")
         false
     }
@@ -207,12 +209,6 @@ class Processor : AbstractProcessor() {
         false -> this
     }
 
-    private fun Element.getPackage(processingEnv: ProcessingEnvironment) =
-        processingEnv.elementUtils.getPackageOf(this).toString()
-
-    private fun Element.getClassName(processingEnv: ProcessingEnvironment) =
-        ClassName(this.getPackage(processingEnv), this.simpleName.toString())
-
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
             throw IllegalStateException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
@@ -220,5 +216,11 @@ class Processor : AbstractProcessor() {
     }
 
 }
+
+internal fun Element.getPackage(processingEnv: ProcessingEnvironment) =
+    processingEnv.elementUtils.getPackageOf(this).toString()
+
+internal fun Element.getClassName(processingEnv: ProcessingEnvironment) =
+    ClassName(this.getPackage(processingEnv), this.simpleName.toString())
 
 data class GeneratedInterface(val name: TypeName, val typeSpec: TypeSpec)
