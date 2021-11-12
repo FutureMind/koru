@@ -682,9 +682,8 @@ class TypesGenerationTest {
 
     }
 
-    //TODO the unannotated Y interface ruins it for now, we should explicitly prohibit that
     @Test
-    fun `should generate complex inheritance hierarchy TODO`() {
+    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -699,7 +698,7 @@ class TypesGenerationTest {
                             @ToNativeInterface
                             interface A : Y {
                                 suspend fun a(whatever: Int) : Float
-                                override fun y(whatever: Int) : Float
+                                override suspend fun y(whatever: Int) : Float
                             }
 
                             @ToNativeInterface
@@ -732,7 +731,7 @@ class TypesGenerationTest {
                             
                             @ToNativeClass
                             @ToNativeInterface
-                            class MultipleInterfacesExample : A, D, Z {
+                            class MultipleInterfacesExample : A, D, Z, Y {
                                 override suspend fun a(whatever: Int) : Float = TODO()
                                 override suspend fun b(whatever: Int) : Float = TODO()
                                 override suspend fun c(whatever: Int) : Float = TODO()
@@ -747,20 +746,20 @@ class TypesGenerationTest {
             tempDir = tempDir
         )
 
-        generatedType.supertypes.map { it.toString() } shouldContainExactly listOf(
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
         )
 
         //Z is inherited directly but not annotated
         //B&C are not inherited directly
-        //Y is inherited
+        //Y is unannotated, but inherited indirectly via A
         generatedType.supertypes.map { it.toString() } shouldNotContainAnyOf listOf(
             "com.futuremind.kmm101.test.B$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.C$defaultInterfaceNameSuffix",
             "com.futuremind.kmm101.test.Z$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.Y$defaultInterfaceNameSuffix",
         )
 
     }
