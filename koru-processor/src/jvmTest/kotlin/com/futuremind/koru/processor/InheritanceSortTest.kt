@@ -6,19 +6,43 @@ import org.junit.jupiter.api.Test
 
 internal class InheritanceSortTest {
 
+    private val a = vertex(A)
+    private val b = vertex(B)
+    private val c = vertex(C)
+    private val d = vertex(D)
+    private val e = vertex(E)
+    private val f = vertex(F)
+
     @Test
-    fun abc() {
+    fun `should just return zero item graph`() {
+        val graph = Graph(listOf<Vertex<Ver, Ver>>())
+        test(graph, expectedSorted = listOf())
+    }
 
-        val a = vertex(A)
-        val b = vertex(B)
-        val c = vertex(C)
-        val d = vertex(D)
-        val e = vertex(E)
-        val f = vertex(F)
+    @Test
+    fun `should just return one item graph`() {
+        val graph = Graph(listOf(a))
+        test(graph, expectedSorted = listOf(a))
+    }
 
-        val graph = Graph(
-            listOf(a, b, c, d, e, f)
-        )
+    @Test
+    fun `should topologically sort a simple graph`() {
+        val graph = Graph(listOf(a, b))
+        graph.addEdge(a, b)
+        test(graph, expectedSorted = listOf(a, b))
+    }
+
+    @Test
+    fun `should topologically sort a simple graph (reversed)`() {
+        val graph = Graph(listOf(a, b))
+        graph.addEdge(b, a)
+        test(graph, expectedSorted = listOf(b, a))
+    }
+
+    @Test
+    fun `should topologically sort multilevel graph`() {
+
+        val graph = Graph(listOf(a, b, c, d, e, f))
 
         graph.addEdge(a, c) //eg class C : A
         graph.addEdge(a, d)
@@ -29,14 +53,25 @@ internal class InheritanceSortTest {
         graph.addEdge(b, f)
         graph.addEdge(d, f)
 
-        println("Order: ${graph.topologicalOrder().map { it.element }}")
+        test(
+            graph = graph,
+            expectedSorted = listOf(a, b, c, d, e, f)
+        )
 
     }
+
+    private fun test(
+        graph: Graph<Ver, Ver>,
+        expectedSorted: List<Vertex<Ver, Ver>>
+    ) = assertEquals(
+        expectedSorted,
+        graph.topologicalOrder()
+    )
 
     private fun vertex(letter: Ver) = Vertex(letter, letter)
 
     enum class Ver {
-        A,B,C,D,E,F
+        A, B, C, D, E, F
     }
 
 }

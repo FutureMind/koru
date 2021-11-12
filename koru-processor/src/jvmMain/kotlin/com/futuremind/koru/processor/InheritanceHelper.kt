@@ -10,13 +10,6 @@ import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 
-data class Vertex<E, D>(
-    val element: E,
-    val descriptor: D,
-) {
-    var inDegree = 0
-}
-
 
 @KotlinPoetMetadataPreview
 internal fun Collection<Element>.sortByInheritance(
@@ -32,8 +25,7 @@ internal fun Collection<Element>.sortByInheritance(
     val graph = Graph(vertices)
 
     vertices.forEach { vertex ->
-        val superInterfacesNames = (vertex.element as TypeElement).toImmutableKmClass()
-            .toTypeSpec(classInspector).superinterfaces.keys
+        val superInterfacesNames = (vertex.element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector).superinterfaces.keys
         superInterfacesNames.forEach { name ->
             val from = vertices.find { it.descriptor == name }
             from?.let { graph.addEdge(from, vertex) }
@@ -44,7 +36,7 @@ internal fun Collection<Element>.sortByInheritance(
 }
 
 
-class Graph<E, D>(
+internal class Graph<E, D>(
     private val vertices: Collection<Vertex<E, D>>
 ) {
 
@@ -86,4 +78,11 @@ class Graph<E, D>(
 
     }
 
+}
+
+internal data class Vertex<E, D>(
+    val element: E,
+    val descriptor: D,
+) {
+    var inDegree = 0
 }

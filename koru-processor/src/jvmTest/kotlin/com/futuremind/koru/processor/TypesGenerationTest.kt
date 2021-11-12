@@ -765,6 +765,56 @@ class TypesGenerationTest {
     }
 
     @Test
+    fun `should generate complex inheritance hierarchy in bad order`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "multipleSuperInterfaces3.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import com.futuremind.koru.ToNativeInterface
+                            import kotlinx.coroutines.flow.Flow
+                            
+                            @ToNativeInterface
+                            class W : X {
+                                override suspend fun x(whatever: Int) : Float = TODO()
+                                override suspend fun y(whatever: Int) : Float = TODO()
+                                override suspend fun z(whatever: Int) : Float = TODO()
+                                suspend fun w(whatever: Int) : Float = TODO()
+                            }
+                         
+                            @ToNativeInterface
+                            interface X : Y, Z {
+                                suspend fun x(whatever: Int) : Float
+                                override suspend fun y(whatever: Int) : Float
+                                override suspend fun z(whatever: Int) : Float
+                            }
+
+                            @ToNativeInterface
+                            interface Y : Z {
+                                suspend fun y(whatever: Int) : Float
+                                override suspend fun z(whatever: Int) : Float
+                            }
+                            
+                            @ToNativeInterface
+                            interface Z {
+                                suspend fun z(whatever: Int) : Float
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.W$defaultInterfaceNameSuffix",
+            tempDir = tempDir
+        )
+
+        generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
+            "com.futuremind.kmm101.test.X$defaultInterfaceNameSuffix",
+        )
+
+    }
+
+    @Test
     fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`() {
 
         val generatedType = compileAndReturnGeneratedClass(
