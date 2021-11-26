@@ -3,8 +3,7 @@ plugins {
         this could be a pure-jvm module, but there are some dependency issues
         https://stackoverflow.com/questions/65830632/cant-access-commonmain-multiplatform-classes-from-a-jvm-only-module
      */
-    val kotlinVersion = "1.5.31"
-    kotlin("multiplatform") version kotlinVersion
+    kotlin("multiplatform") version "1.5.31"
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")
