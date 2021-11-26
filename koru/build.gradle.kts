@@ -1,5 +1,6 @@
 plugins {
-    kotlin("multiplatform")
+    val kotlinVersion = "1.5.31"
+    kotlin("multiplatform") version kotlinVersion
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")

@@ -1,3 +1,14 @@
+rootProject.name = "Koru"
+gradle.rootProject {
+    group = "com.futuremind"
+    version = "0.10.0"
+}
+
+
+includeBuild("gradlePlugins")
+include(":koru")
+include(":koru-processor")
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -7,8 +18,9 @@ pluginManagement {
         maven("https://plugins.gradle.org/m2/")
     }
 }
-rootProject.name = "Koru"
 
-includeBuild("gradlePlugins")
-include(":koru")
-include(":koru-processor")
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}

@@ -3,7 +3,8 @@ plugins {
         this could be a pure-jvm module, but there are some dependency issues
         https://stackoverflow.com/questions/65830632/cant-access-commonmain-multiplatform-classes-from-a-jvm-only-module
      */
-    kotlin("multiplatform")
+    val kotlinVersion = "1.5.31"
+    kotlin("multiplatform") version kotlinVersion
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")
@@ -40,10 +41,10 @@ kotlin {
 
         val jvmTest by getting {
             dependencies {
-                implementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
-                implementation("com.github.tschuchortdev:kotlin-compile-testing:1.3.5")
-                implementation("io.kotest:kotest-assertions-core:4.4.0.RC2")
+                implementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.6")
+                implementation("io.kotest:kotest-assertions-core:4.6.3")
             }
         }
 
