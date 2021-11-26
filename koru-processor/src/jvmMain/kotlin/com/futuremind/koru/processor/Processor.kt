@@ -2,11 +2,10 @@ package com.futuremind.koru.processor
 
 import com.futuremind.koru.*
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.ProcessingEnvironment
@@ -97,9 +96,7 @@ class Processor : AbstractProcessor() {
     ): Pair<ClassName, PropertySpec> {
 
         val packageName = element.getPackage(processingEnv)
-        val scopeClassSpec = (element as TypeElement)
-            .toImmutableKmClass()
-            .toTypeSpec(classInspector)
+        val scopeClassSpec = (element as TypeElement).toTypeSpec(classInspector)
 
         scopeClassSpec.assertExtendsScopeProvider()
 
@@ -125,7 +122,7 @@ class Processor : AbstractProcessor() {
     ): Pair<TypeName, GeneratedInterface> {
 
         val typeName = element.getClassName(processingEnv)
-        val typeSpec = (element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector)
+        val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeInterface::class.java)
         val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
 
@@ -153,7 +150,7 @@ class Processor : AbstractProcessor() {
     ) {
 
         val originalTypeName = element.getClassName(processingEnv)
-        val typeSpec = (element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector)
+        val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeClass::class.java)
 
         val generatedClassName =
