@@ -31,9 +31,13 @@ class PublishPlugin : Plugin<Project> {
             val pomName = extension.pomName ?: throwIllegalConfig("pomName")
             val pomDescription = extension.pomDescription ?: throwIllegalConfig("pomDescription")
 
-            val javadocJar = project.createJavaDoc()
-            project.configureMavenPublication(javadocJar, pomName, pomDescription)
-            project.configureArtifactSigning()
+            try {
+                val javadocJar = project.createJavaDoc()
+                project.configureMavenPublication(javadocJar, pomName, pomDescription)
+                project.configureArtifactSigning()
+            } catch (e: Exception) {
+                logger.warn("Warning: Publish config missing (no local.properties), skipping.")
+            }
         }
 
     }
