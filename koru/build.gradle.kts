@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform")
+    kotlin("multiplatform") version "1.5.31"
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")

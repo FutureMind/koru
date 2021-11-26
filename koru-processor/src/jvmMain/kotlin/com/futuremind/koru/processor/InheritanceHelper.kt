@@ -4,7 +4,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import java.util.*
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
@@ -25,7 +24,7 @@ internal fun Collection<Element>.sortByInheritance(
     val graph = Graph(vertices)
 
     vertices.forEach { vertex ->
-        val superInterfacesNames = (vertex.element as TypeElement).toImmutableKmClass().toTypeSpec(classInspector).superinterfaces.keys
+        val superInterfacesNames = (vertex.element as TypeElement).toTypeSpec(classInspector).superinterfaces.keys
         superInterfacesNames.forEach { name ->
             val from = vertices.find { it.descriptor == name }
             from?.let { graph.addEdge(from, vertex) }
