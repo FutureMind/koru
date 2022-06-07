@@ -22,7 +22,7 @@ import javax.tools.Diagnostic.Kind.ERROR
 const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-class Processor : AbstractProcessor() {
+class KaptProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes() = mutableSetOf(
         ToNativeClass::class.java.canonicalName,

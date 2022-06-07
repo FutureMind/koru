@@ -2,6 +2,7 @@ package com.futuremind.koru.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.io.File
@@ -54,7 +55,19 @@ fun prepareCompilation(
 ) = KotlinCompilation()
     .apply {
         workingDir = tempDir
-        annotationProcessors = listOf(Processor())
+        annotationProcessors = listOf(KaptProcessor())
+        inheritClassPath = true
+        sources = sourceFiles
+        verbose = false
+    }
+
+fun prepareKspCompilation(
+    sourceFiles: List<SourceFile>,
+    tempDir: File
+) = KotlinCompilation()
+    .apply {
+        workingDir = tempDir
+        symbolProcessorProviders = listOf(KoruProcessorProvider())
         inheritClassPath = true
         sources = sourceFiles
         verbose = false

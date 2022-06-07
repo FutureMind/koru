@@ -3,7 +3,7 @@ plugins {
         this could be a pure-jvm module, but there are some dependency issues
         https://stackoverflow.com/questions/65830632/cant-access-commonmain-multiplatform-classes-from-a-jvm-only-module
      */
-    kotlin("multiplatform") version "1.5.31"
+    kotlin("multiplatform") version "1.6.10"
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")
@@ -28,11 +28,14 @@ kotlin {
                 implementation(project(":koru"))
 
                 //code generation
-                val kotlinpoetVersion = "1.10.2"
+                val kotlinpoetVersion = "1.11.0"
                 implementation("com.squareup:kotlinpoet:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata:$kotlinpoetVersion")
+                implementation("com.squareup:kotlinpoet-ksp:$kotlinpoetVersion")
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+
+                implementation("com.google.devtools.ksp:symbol-processing-api:1.6.10-1.0.2")
             }
         }
 
@@ -41,6 +44,7 @@ kotlin {
                 implementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
                 runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
                 implementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.6")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.6")
                 implementation("io.kotest:kotest-assertions-core:4.6.3")
             }
         }
