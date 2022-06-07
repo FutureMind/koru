@@ -36,6 +36,19 @@ fun compileAndReturnGeneratedClass(
     return generatedClass.kotlin
 }
 
+//TODO dry
+fun compileAndReturnKspGeneratedClass(
+    source: SourceFile,
+    generatedClassCanonicalName: String,
+    tempDir: File
+): KClass<out Any> {
+    val compilationResult = prepareKspCompilation(listOf(source), tempDir).compile()
+//    debugPrintGenerated(compilationResult)
+    val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
+    compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+    return generatedClass.kotlin
+}
+
 fun debugPrintGenerated(compilationResult: KotlinCompilation.Result) {
     compilationResult.generatedFiles.forEach {
         println("\n\n"+it.absolutePath+"\n")
@@ -61,6 +74,7 @@ fun prepareCompilation(
         verbose = false
     }
 
+//TODO dry
 fun prepareKspCompilation(
     sourceFiles: List<SourceFile>,
     tempDir: File

@@ -1,6 +1,7 @@
 package com.futuremind.koru.processor
 
 import com.futuremind.koru.ExportedScopeProvider
+import com.futuremind.koru.ToNativeInterface
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -35,10 +36,23 @@ class KspProcessor(
         val scopeProvidersSymbols = resolver
             .getSymbolsWithAnnotation(ExportedScopeProvider::class.qualifiedName!!)
 
-        scopeProvidersSymbols.filter { it is KSClassDeclaration && it.validate() }
+        val interfaceSymbols = resolver
+            .getSymbolsWithAnnotation(ToNativeInterface::class.qualifiedName!!)
+
+        scopeProvidersSymbols
+            .filter { it is KSClassDeclaration && it.validate() }
             .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
 
-        val unableToProcess = scopeProvidersSymbols.filterNot { it.validate() }
+        interfaceSymbols
+            .filterIsInstance<KSClassDeclaration>()
+            .filter { it.validate() }
+            .toList()
+            .sortByInheritance()
+            .apply { println("BBB $this") }
+            .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
+
+        val unableToProcess = (scopeProvidersSymbols + interfaceSymbols)
+            .filterNot { it.validate() }
 
         return unableToProcess.toList()
 
