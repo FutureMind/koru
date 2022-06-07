@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import java.io.File
+import java.util.*
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
@@ -101,7 +102,12 @@ class KaptProcessor : AbstractProcessor() {
         scopeClassSpec.assertExtendsScopeProvider()
 
         val originalClassName = element.getClassName(processingEnv)
-        val propertySpec = ScopeProviderBuilder(packageName, scopeClassSpec).build()
+        val scopeProviderClassName = ClassName(packageName, scopeClassSpec.name.toString())
+        val scopePropertyName = "exportedScopeProvider_"+ scopeClassSpec.name!!.replaceFirstChar { it.lowercase(Locale.ROOT) }
+        val propertySpec = ScopeProviderBuilder(
+            scopeProviderClassName,
+            scopePropertyName
+        ).build()
 
         FileSpec
             .builder(originalClassName.packageName, "${originalClassName.simpleName}Container")
