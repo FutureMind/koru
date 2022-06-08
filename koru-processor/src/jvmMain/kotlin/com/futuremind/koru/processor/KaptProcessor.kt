@@ -16,7 +16,6 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.MirroredTypeException
-import javax.lang.model.type.TypeMirror
 import javax.tools.Diagnostic.Kind.ERROR
 
 
@@ -180,26 +179,26 @@ class KaptProcessor : AbstractProcessor() {
 
     private fun obtainScopeProviderMemberName(
         annotation: ToNativeClass,
-        scopeProviders: Map<ClassName, PropertySpec>
+        availableScopeProviders: Map<ClassName, PropertySpec>
     ): MemberName? {
         //this is the dirtiest hack ever but it works :O
         //there probably is some way of doing this via kotlinpoet-metadata
         //https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
-        var typeMirror: TypeMirror? = null
+        var scopeProviderTypeName: TypeName? = null
         try {
             annotation.launchOnScope
         } catch (e: MirroredTypeException) {
-            typeMirror = e.typeMirror
+            scopeProviderTypeName = e.typeMirror.asTypeName()
         }
-        if (typeMirror != null
-            && typeMirror.toString() != "com.futuremind.koru.NoScopeProvider" //TODO do not compare strings but types
-            && scopeProviders[typeMirror.asTypeName()] == null
+        if (scopeProviderTypeName != null
+            && scopeProviderTypeName != NoScopeProvider::class.asTypeName()
+            && availableScopeProviders[scopeProviderTypeName] == null
         ) {
-            throw IllegalStateException("$typeMirror can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
+            throw IllegalStateException("$scopeProviderTypeName can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
         }
-        return scopeProviders[typeMirror?.asTypeName()]?.let {
+        return availableScopeProviders[scopeProviderTypeName]?.let {
             MemberName(
-                packageName = (typeMirror?.asTypeName() as ClassName).packageName,
+                packageName = (scopeProviderTypeName as ClassName).packageName,
                 simpleName = it.name
             )
         }
