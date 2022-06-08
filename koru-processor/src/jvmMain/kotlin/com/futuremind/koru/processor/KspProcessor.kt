@@ -2,15 +2,11 @@ package com.futuremind.koru.processor
 
 import com.futuremind.koru.ExportedScopeProvider
 import com.futuremind.koru.ToNativeInterface
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSVisitorVoid
-import com.google.devtools.ksp.validate
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
-import com.squareup.kotlinpoet.ksp.toClassName
-import com.squareup.kotlinpoet.ksp.writeTo
+import com.google.devtools.ksp.symbol.*
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ksp.*
 import java.util.*
 import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
@@ -24,6 +20,7 @@ class KoruProcessorProvider : SymbolProcessorProvider {
     )
 }
 
+@OptIn(KotlinPoetKspPreview::class, KspExperimental::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class KspProcessor(
     private val options: Map<String, String>,
@@ -43,13 +40,57 @@ class KspProcessor(
             .filter { it is KSClassDeclaration && it.validate() }
             .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
 
+        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterface>()
+
         interfaceSymbols
             .filterIsInstance<KSClassDeclaration>()
             .filter { it.validate() }
             .toList()
             .sortByInheritance()
             .apply { println("BBB $this") }
-            .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
+            .forEach { classDeclaration ->
+
+                val builder = when(classDeclaration.isAbstract()){
+                    true -> TypeSpec.interfaceBuilder(classDeclaration.toClassName())
+                    false -> TypeSpec.classBuilder(classDeclaration.toClassName())
+                }
+
+                val originalTypeSpec = builder
+                    .addModifiers(classDeclaration.modifiers.map { it.toKModifier()!! })
+                    .addSuperinterfaces(classDeclaration.superTypes.toList().map { it.toTypeName() })
+                    .addFunctions(
+                        classDeclaration.getDeclaredFunctions()
+                            .filterNot { it.isConstructor() }
+                            .toList()
+                            .map { it.toFunSpec() }
+                    ).build()
+
+                val annotationArgs = classDeclaration.annotations
+                    .first { it.shortName.asString() == ToNativeInterface::class.simpleName }
+                    .arguments
+
+                val annotation = classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
+                val typeName = classDeclaration.toClassName()
+                val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
+
+                val generatedType = WrapperInterfaceBuilder(
+                    originalTypeName = typeName,
+                    originalTypeSpec = originalTypeSpec,
+                    newTypeName = newTypeName,
+                    generatedInterfaces = generatedInterfaces
+                ).build()
+
+                //add generated
+
+                println("KSP: \n${originalTypeSpec}")
+                println("KSP gen: \n${generatedType}")
+
+                FileSpec.builder(typeName.packageName, newTypeName)
+                    .addType(generatedType)
+                    .build()
+                    .writeTo(codeGenerator, Dependencies(aggregating = false))
+
+            }
 
         val unableToProcess = (scopeProvidersSymbols + interfaceSymbols)
             .filterNot { it.validate() }
@@ -57,6 +98,18 @@ class KspProcessor(
         return unableToProcess.toList()
 
     }
+
+    private fun KSFunctionDeclaration.toFunSpec() : FunSpec =
+        FunSpec.builder(this.simpleName.asString())
+            .addModifiers(this.modifiers.map { it.toKModifier()!! })
+            .addParameters(this.parameters.map { it.toParameterSpec() })
+            .returns(this.returnType!!.toTypeName())
+            .build()
+
+    private fun KSValueParameter.toParameterSpec() = ParameterSpec.builder(
+            name = this.name!!.getShortName(),
+            type = this.type.toTypeName()
+        ).build()
 
     inner class ScopeProviderVisitor(private val codeGenerator: CodeGenerator) : KSVisitorVoid() {
 

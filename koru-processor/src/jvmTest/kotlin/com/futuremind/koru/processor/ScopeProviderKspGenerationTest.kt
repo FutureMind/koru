@@ -87,10 +87,9 @@ class ScopeProviderKspGenerationTest {
                             }
 
                             interface Z {
-                                suspend fun z(whatever: Int) : Float
+                                suspend fun z(whatever: Int) : Flow<Float>
                             }
                             
-                            @ToNativeClass
                             @ToNativeInterface
                             class MultipleInterfacesExample : A, D, Z {
                                 override suspend fun a(whatever: Int) : Float = TODO()
@@ -98,11 +97,11 @@ class ScopeProviderKspGenerationTest {
                                 override suspend fun c(whatever: Int) : Float = TODO()
                                 override suspend fun d(whatever: Int) : Float = TODO()
                                 suspend fun e(whatever: Int) : Float = TODO()
-                                override suspend fun z(whatever: Int) : Float = TODO()
+                                override suspend fun z(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
             ),
-            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
             tempDir = tempDir
         )
 
@@ -122,7 +121,7 @@ class ScopeProviderKspGenerationTest {
 
     }
 
-    private val KotlinCompilation.Result.kspGeneratedSources: List<File> get() {
+    val KotlinCompilation.Result.kspGeneratedSources: List<File> get() {
         val kspWorkingDir = tempDir.resolve("ksp")
         val kspGeneratedDir = kspWorkingDir.resolve("sources")
         val kotlinGeneratedDir = kspGeneratedDir.resolve("kotlin")

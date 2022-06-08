@@ -129,6 +129,8 @@ class KaptProcessor : AbstractProcessor() {
         val annotation = element.getAnnotation(ToNativeInterface::class.java)
         val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
 
+        println("KAPT: \n$typeSpec")
+
         val generatedType =
             WrapperInterfaceBuilder(typeName, typeSpec, newTypeName, generatedInterfaces).build()
 
@@ -199,11 +201,6 @@ class KaptProcessor : AbstractProcessor() {
                 simpleName = it.name
             )
         }
-    }
-
-    private fun String.nonEmptyOr(or: String) = when (this.isEmpty()) {
-        true -> or
-        false -> this
     }
 
     private fun TypeSpec.assertExtendsScopeProvider() {
