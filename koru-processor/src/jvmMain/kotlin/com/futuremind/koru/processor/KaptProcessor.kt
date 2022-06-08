@@ -21,6 +21,7 @@ import javax.tools.Diagnostic.Kind.ERROR
 
 const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
 
+@OptIn(KotlinPoetMetadataPreview::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class KaptProcessor : AbstractProcessor() {
 
@@ -30,7 +31,6 @@ class KaptProcessor : AbstractProcessor() {
         ExportedScopeProvider::class.java.canonicalName
     )
 
-    @OptIn(KotlinPoetMetadataPreview::class)
     override fun process(
         annotations: MutableSet<out TypeElement>?,
         roundEnv: RoundEnvironment
@@ -88,7 +88,6 @@ class KaptProcessor : AbstractProcessor() {
         false
     }
 
-    @KotlinPoetMetadataPreview
     private fun generateScopeProvider(
         element: Element,
         classInspector: ClassInspector,
@@ -118,7 +117,6 @@ class KaptProcessor : AbstractProcessor() {
 
     }
 
-    @KotlinPoetMetadataPreview
     private fun generateInterface(
         element: Element,
         classInspector: ClassInspector,
@@ -145,7 +143,6 @@ class KaptProcessor : AbstractProcessor() {
 
     }
 
-    @KotlinPoetMetadataPreview
     private fun generateWrappedClasses(
         element: Element,
         classInspector: ClassInspector,

@@ -13,7 +13,7 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 
 
-@KotlinPoetMetadataPreview
+@OptIn(KotlinPoetMetadataPreview::class)
 internal fun Collection<Element>.sortByInheritance(
     classInspector: ClassInspector,
     processingEnv: ProcessingEnvironment
