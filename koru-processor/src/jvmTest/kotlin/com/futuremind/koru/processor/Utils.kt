@@ -60,6 +60,7 @@ object KSPRuntimeCompiler {
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
 //            workingDir = tempDir
+            verbose = false
             inheritClassPath = true
         }.compile()
         require(pass2.exitCode == KotlinCompilation.ExitCode.OK) {
@@ -77,10 +78,10 @@ object KSPRuntimeCompiler {
 
     private fun KotlinCompilation.kspGeneratedSourceFiles(tempDir: File): List<SourceFile> =
         kspGeneratedSources(tempDir)
-            .apply { println("aaa"+this.joinToString { "\n${it.isFile}" }) }
+//            .apply { println("aaa"+this.joinToString { "\n${it.isFile}" }) }
             .filter { it.isFile }
             .map { SourceFile.fromPath(it.absoluteFile) }
-            .apply { println("bbb"+this) }
+//            .apply { println("bbb"+this) }
             .toList()
 }
 

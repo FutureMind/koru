@@ -47,7 +47,6 @@ class KspProcessor(
             .filter { it.validate() }
             .toList()
             .sortByInheritance()
-            .apply { println("BBB $this") }
             .forEach { classDeclaration ->
 
                 val builder = when(classDeclaration.isAbstract()){
@@ -65,10 +64,6 @@ class KspProcessor(
                             .map { it.toFunSpec() }
                     ).build()
 
-                val annotationArgs = classDeclaration.annotations
-                    .first { it.shortName.asString() == ToNativeInterface::class.simpleName }
-                    .arguments
-
                 val annotation = classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
                 val typeName = classDeclaration.toClassName()
                 val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
@@ -79,6 +74,11 @@ class KspProcessor(
                     newTypeName = newTypeName,
                     generatedInterfaces = generatedInterfaces
                 ).build()
+
+                generatedInterfaces[typeName] = GeneratedInterface(
+                    ClassName(typeName.packageName, newTypeName),
+                    generatedType
+                )
 
                 //add generated
 

@@ -107,8 +107,7 @@ class ScopeProviderKspGenerationTest {
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
             "com.futuremind.kmm101.test.A$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix",
-            "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
+            "com.futuremind.kmm101.test.D$defaultInterfaceNameSuffix"
         )
 
         //Z is inherited directly but not annotated
