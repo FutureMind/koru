@@ -43,8 +43,8 @@ kotlin {
             dependencies {
                 implementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
                 runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-                implementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.6")
-                implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.6")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.8")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.8")
                 implementation("io.kotest:kotest-assertions-core:4.6.3")
             }
         }

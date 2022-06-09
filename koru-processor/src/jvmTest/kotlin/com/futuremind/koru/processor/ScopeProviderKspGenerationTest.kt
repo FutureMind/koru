@@ -36,7 +36,7 @@ class ScopeProviderKspGenerationTest {
 
         val compilationResult = prepareKspCompilation(listOf(source), tempDir).compile()
 
-        val generatedScopeProvider = compilationResult.kspGeneratedSources
+        val generatedScopeProvider = kspGeneratedSources(tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -121,12 +121,5 @@ class ScopeProviderKspGenerationTest {
 
     }
 
-    val KotlinCompilation.Result.kspGeneratedSources: List<File> get() {
-        val kspWorkingDir = tempDir.resolve("ksp")
-        val kspGeneratedDir = kspWorkingDir.resolve("sources")
-        val kotlinGeneratedDir = kspGeneratedDir.resolve("kotlin")
-        val javaGeneratedDir = kspGeneratedDir.resolve("java")
-        return kotlinGeneratedDir.walkTopDown().toList() +
-                javaGeneratedDir.walkTopDown()
-    }
+
 }

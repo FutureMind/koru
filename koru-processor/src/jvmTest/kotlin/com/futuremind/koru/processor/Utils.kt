@@ -1,9 +1,6 @@
 package com.futuremind.koru.processor
 
-import com.tschuchort.compiletesting.KotlinCompilation
-import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspSourcesDir
-import com.tschuchort.compiletesting.symbolProcessorProviders
+import com.tschuchort.compiletesting.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.io.File
@@ -44,7 +41,7 @@ fun compileAndReturnKspGeneratedClass(
     tempDir: File
 ): KClass<out Any> {
     val compilationResult = KSPRuntimeCompiler.compile(
-        prepareKspCompilation(listOf(source), tempDir)
+        tempDir, prepareKspCompilation(listOf(source), tempDir)
     )
 //    val compilationResultKapt = prepareCompilation(listOf(source), tempDir).compile()
 //    debugPrintGenerated(compilationResult)
@@ -55,13 +52,15 @@ fun compileAndReturnKspGeneratedClass(
 
 object KSPRuntimeCompiler {
 
-    fun compile(compilation: KotlinCompilation): KotlinCompilation.Result {
+    fun compile(tempDir: File, compilation: KotlinCompilation): KotlinCompilation.Result {
         val pass1 = compilation.compile()
         require(pass1.exitCode == KotlinCompilation.ExitCode.OK) {
             "Cannot do the 1st pass"
         }
         val pass2 = KotlinCompilation().apply {
-            sources = compilation.sources + compilation.kspGeneratedSourceFiles
+            sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
+//            workingDir = tempDir
+            inheritClassPath = true
         }.compile()
         require(pass2.exitCode == KotlinCompilation.ExitCode.OK) {
             "Cannot do the 2nd pass \n ${pass2.messages}"
@@ -69,11 +68,19 @@ object KSPRuntimeCompiler {
         return pass2
     }
 
-    private val KotlinCompilation.kspGeneratedSourceFiles: List<SourceFile>
-        get() = kspSourcesDir.resolve("kotlin")
-            .walk()
+//    private fun KotlinCompilation.kspGeneratedSourceFiles(tempDir: File): List<SourceFile>
+//        = kspSourcesDir.resolve("kotlin")
+//            .walk()
+//            .filter { it.isFile }
+//            .map { SourceFile.fromPath(it.absoluteFile) }
+//            .toList()
+
+    private fun KotlinCompilation.kspGeneratedSourceFiles(tempDir: File): List<SourceFile> =
+        kspGeneratedSources(tempDir)
+            .apply { println("aaa"+this.joinToString { "\n${it.isFile}" }) }
             .filter { it.isFile }
             .map { SourceFile.fromPath(it.absoluteFile) }
+            .apply { println("bbb"+this) }
             .toList()
 }
 
@@ -113,6 +120,7 @@ fun prepareKspCompilation(
         inheritClassPath = true
         sources = sourceFiles
         verbose = false
+        kspIncremental = false
     }
 
 fun KClass<*>.member(methodName: String) =
@@ -128,6 +136,14 @@ fun Collection<File>.getContentByFilename(filename: String) = this
 const val defaultClassNameSuffix = "Native"
 const val defaultInterfaceNameSuffix = "NativeProtocol"
 
+fun kspGeneratedSources(tempDir: File): List<File> {
+    val kspWorkingDir = tempDir.resolve("ksp")
+    val kspGeneratedDir = kspWorkingDir.resolve("sources")
+    val kotlinGeneratedDir = kspGeneratedDir.resolve("kotlin")
+    val javaGeneratedDir = kspGeneratedDir.resolve("java")
+    return kotlinGeneratedDir.walkTopDown().toList() +
+            javaGeneratedDir.walkTopDown()
+}
 
 //logging: Created temporary working directory at /var/folders/8n/1534k2kd20g0npbvwqbpq_pm0000gn/T/Kotlin-Compilation10739665445976763638
 //logging: No services were given. Not running kapt steps.
