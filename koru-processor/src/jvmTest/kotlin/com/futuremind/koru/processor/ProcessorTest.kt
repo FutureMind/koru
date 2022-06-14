@@ -15,20 +15,19 @@ annotation class ProcessorTest(
     val ksp: Boolean = true
 )
 
-
 enum class ProcessorType {
     KAPT, KSP
 }
-
 
 class ProcessorTestExtension : TestTemplateInvocationContextProvider {
 
     override fun supportsTestTemplate(context: ExtensionContext?) = true
 
     override fun provideTestTemplateInvocationContexts(context: ExtensionContext): Stream<TestTemplateInvocationContext> {
-        val testMethod = context.requiredTestMethod
-        val methodName = context.displayName
-        val annotation = AnnotationUtils.findAnnotation(testMethod, ProcessorTest::class.java).get()
+        val annotation = AnnotationUtils.findAnnotation(
+            context.requiredTestMethod,
+            ProcessorTest::class.java
+        ).get()
         return listOfNotNull<TestTemplateInvocationContext>(
             if (annotation.kapt) ProcessorTestContext(ProcessorType.KAPT) else null,
             if (annotation.ksp) ProcessorTestContext(ProcessorType.KSP) else null,

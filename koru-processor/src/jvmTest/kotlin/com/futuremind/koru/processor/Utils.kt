@@ -9,15 +9,17 @@ import kotlin.reflect.KClass
 fun testThrowsCompilationError(
     source: SourceFile,
     expectedMessage: String,
-    tempDir: File
-) = testThrowsCompilationError(listOf(source), expectedMessage, tempDir)
+    tempDir: File,
+    processorType: ProcessorType = ProcessorType.KAPT
+) = testThrowsCompilationError(listOf(source), expectedMessage, tempDir, processorType)
 
 fun testThrowsCompilationError(
     sources: List<SourceFile>,
     expectedMessage: String,
-    tempDir: File
+    tempDir: File,
+    processorType: ProcessorType
 ) {
-    val compilationResult = prepareCompilation(sources, tempDir).compile()
+    val compilationResult = prepareCompilation(sources, tempDir, processorType).compile()
     compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
     compilationResult.messages shouldContain expectedMessage
 }
@@ -25,30 +27,36 @@ fun testThrowsCompilationError(
 fun compileAndReturnGeneratedClass(
     source: SourceFile,
     generatedClassCanonicalName: String,
-    tempDir: File
+    tempDir: File,
+    processorType: ProcessorType = ProcessorType.KAPT
 ): KClass<out Any> {
-    val compilationResult = prepareCompilation(source, tempDir).compile()
+    val compilationResult = when(processorType) {
+        ProcessorType.KAPT -> prepareCompilation(source, tempDir, processorType).compile()
+        ProcessorType.KSP -> KSPRuntimeCompiler.compile(
+            tempDir, prepareCompilation(source, tempDir, processorType)
+        )
+    }
 //    debugPrintGenerated(compilationResult)
     val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
     compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
     return generatedClass.kotlin
 }
 
-//TODO dry
-fun compileAndReturnKspGeneratedClass(
-    source: SourceFile,
-    generatedClassCanonicalName: String,
-    tempDir: File
-): KClass<out Any> {
-    val compilationResult = KSPRuntimeCompiler.compile(
-        tempDir, prepareKspCompilation(listOf(source), tempDir)
-    )
-//    val compilationResultKapt = prepareCompilation(listOf(source), tempDir).compile()
-//    debugPrintGenerated(compilationResult)
-    val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
-    compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-    return generatedClass.kotlin
-}
+////TODO dry
+//fun compileAndReturnKspGeneratedClass(
+//    source: SourceFile,
+//    generatedClassCanonicalName: String,
+//    tempDir: File
+//): KClass<out Any> {
+//    val compilationResult = KSPRuntimeCompiler.compile(
+//        tempDir, prepareKspCompilation(listOf(source), tempDir)
+//    )
+////    val compilationResultKapt = prepareCompilation(listOf(source), tempDir).compile()
+////    debugPrintGenerated(compilationResult)
+//    val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
+//    compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+//    return generatedClass.kotlin
+//}
 
 object KSPRuntimeCompiler {
 
@@ -59,7 +67,6 @@ object KSPRuntimeCompiler {
         }
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
-//            workingDir = tempDir
             verbose = false
             inheritClassPath = true
         }.compile()
@@ -95,34 +102,31 @@ fun debugPrintGenerated(compilationResult: KotlinCompilation.Result) {
 
 fun prepareCompilation(
     sourceFile: SourceFile,
-    tempDir: File
+    tempDir: File,
+    processorType: ProcessorType = ProcessorType.KAPT //todo only temp default
 ) = prepareCompilation(listOf(sourceFile), tempDir)
 
 fun prepareCompilation(
     sourceFiles: List<SourceFile>,
-    tempDir: File
+    tempDir: File,
+    processorType: ProcessorType = ProcessorType.KAPT
 ) = KotlinCompilation()
     .apply {
         workingDir = tempDir
-        annotationProcessors = listOf(KaptProcessor())
         inheritClassPath = true
         sources = sourceFiles
         verbose = false
+        when(processorType){
+            ProcessorType.KAPT -> {
+                annotationProcessors =  listOf(KaptProcessor())
+            }
+            ProcessorType.KSP -> {
+                symbolProcessorProviders = listOf(KoruProcessorProvider())
+                kspIncremental = false
+            }
+        }
     }
 
-//TODO dry
-fun prepareKspCompilation(
-    sourceFiles: List<SourceFile>,
-    tempDir: File
-) = KotlinCompilation()
-    .apply {
-        workingDir = tempDir
-        symbolProcessorProviders = listOf(KoruProcessorProvider())
-        inheritClassPath = true
-        sources = sourceFiles
-        verbose = false
-        kspIncremental = false
-    }
 
 fun KClass<*>.member(methodName: String) =
     members.find { it.name == methodName }!!
