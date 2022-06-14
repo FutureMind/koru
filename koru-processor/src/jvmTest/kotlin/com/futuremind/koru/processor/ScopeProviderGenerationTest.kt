@@ -113,10 +113,10 @@ class ScopeProviderGenerationTest {
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
 
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"

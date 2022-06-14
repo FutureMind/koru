@@ -84,7 +84,7 @@ class KaptProcessor : AbstractProcessor() {
         roundEnv.getElementsAnnotatedWith(ToNativeClass::class.java)
             .asSequence()
             .map { element ->
-                generateWrappedClasses(
+                generateClass(
                     element = element,
                     classInspector = classInspector,
                     generatedInterfaces = generatedInterfaces,
@@ -161,7 +161,7 @@ class KaptProcessor : AbstractProcessor() {
 
     }
 
-    private fun generateWrappedClasses(
+    private fun generateClass(
         element: Element,
         classInspector: ClassInspector,
         generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
