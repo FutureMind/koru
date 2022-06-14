@@ -35,8 +35,8 @@ class ScopeProviderGenerationTest {
             tempDir = tempDir
         )
 
-    @Test
-    fun `should generate top level property with scope provider`() {
+    @ProcessorTest
+    fun `should generate top level property with scope provider`(processor: ProcessorType) {
 
         val source = SourceFile.kotlin(
             "scopeProvider2.kt",
@@ -54,7 +54,11 @@ class ScopeProviderGenerationTest {
             """
         )
 
-        val compilationResult = prepareCompilation(source, tempDir).compile()
+        //TODO
+        val compilationResult = when(processor){
+            ProcessorType.KAPT -> prepareCompilation(source, tempDir).compile()
+            ProcessorType.KSP -> prepareKspCompilation(listOf(source), tempDir).compile()
+        }
 
         val generatedScopeProvider = compilationResult.generatedFiles
             .getContentByFilename("MainScopeProviderContainer.kt")
