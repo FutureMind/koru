@@ -58,13 +58,20 @@ class KspProcessor(
                 val originalTypeSpec = builder
                     .addModifiers(classDeclaration.modifiers.map { it.toKModifier()!! })
                     .addSuperinterfaces(
-                        classDeclaration.superTypes.toList().map { it.toTypeName() })
+                        classDeclaration.superTypes.toList().map { it.toTypeName() }
+                    )
                     .addFunctions(
                         classDeclaration.getDeclaredFunctions()
                             .filterNot { it.isConstructor() }
                             .toList()
                             .map { it.toFunSpec() }
-                    ).build()
+                    )
+                    .addProperties(
+                        classDeclaration.getDeclaredProperties()
+                            .toList()
+                            .map { it.toPropertySpec() }
+                    )
+                    .build()
 
                 val annotation =
                     classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
@@ -103,16 +110,21 @@ class KspProcessor(
     }
 
     private fun KSFunctionDeclaration.toFunSpec(): FunSpec =
-        FunSpec.builder(this.simpleName.asString())
-            .addModifiers(this.modifiers.map { it.toKModifier()!! })
-            .addParameters(this.parameters.map { it.toParameterSpec() })
-            .returns(this.returnType!!.toTypeName())
+        FunSpec.builder(simpleName.asString())
+            .addModifiers(modifiers.map { it.toKModifier()!! })
+            .addParameters(parameters.map { it.toParameterSpec() })
+            .returns(returnType!!.toTypeName())
             .build()
 
     private fun KSValueParameter.toParameterSpec() = ParameterSpec.builder(
         name = this.name!!.getShortName(),
         type = this.type.toTypeName()
     ).build()
+
+    private fun KSPropertyDeclaration.toPropertySpec() : PropertySpec =
+        PropertySpec.builder(simpleName.asString(), type.toTypeName())
+            .addModifiers(modifiers.map { it.toKModifier()!! })
+            .build()
 
     inner class ScopeProviderVisitor(private val codeGenerator: CodeGenerator) : KSVisitorVoid() {
 
@@ -149,7 +161,5 @@ class KspProcessor(
                 wrongScopeProviderSupertype()
             }
         }
-
     }
-
 }
