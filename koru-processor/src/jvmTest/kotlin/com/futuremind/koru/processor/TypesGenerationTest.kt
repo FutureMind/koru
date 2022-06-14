@@ -264,8 +264,8 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate interface with custom name via @ToNativeInterface(name)`() {
+    @ProcessorTest
+    fun `should generate interface with custom name via @ToNativeInterface(name)`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -285,7 +285,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.CustomIosProtocol",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
     }
 
@@ -348,8 +349,8 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should not wrap private functions when generating interface`() {
+    @ProcessorTest
+    fun `should not wrap private functions when generating interface`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -372,7 +373,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.PrivateFunctionsExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
         //enough to check it compiles, it would not with wrapped private function
 
@@ -446,8 +448,8 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`() {
+    @ProcessorTest
+    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -493,7 +495,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.NotAnnotatedInterface$defaultInterfaceNameSuffix"
@@ -766,8 +769,8 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate complex inheritance hierarchy in bad order`() {
+    @ProcessorTest
+    fun `should generate complex inheritance hierarchy in bad order`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -807,7 +810,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.W$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -953,8 +957,8 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should throw on interface generation from private type`() = testThrowsCompilationError(
+    @ProcessorTest
+    fun `should throw on interface generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
         source = SourceFile.kotlin(
             "private.kt",
             """
@@ -969,7 +973,8 @@ class TypesGenerationTest {
                         """
         ),
         expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir
+        tempDir = tempDir,
+        processorType = processorType
     )
 
     @Test
