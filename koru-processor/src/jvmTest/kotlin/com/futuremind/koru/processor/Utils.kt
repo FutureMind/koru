@@ -10,7 +10,7 @@ fun testThrowsCompilationError(
     source: SourceFile,
     expectedMessage: String,
     tempDir: File,
-    processorType: ProcessorType = ProcessorType.KAPT
+    processorType: ProcessorType
 ) = testThrowsCompilationError(listOf(source), expectedMessage, tempDir, processorType)
 
 fun testThrowsCompilationError(
@@ -28,7 +28,7 @@ fun compileAndReturnGeneratedClass(
     source: SourceFile,
     generatedClassCanonicalName: String,
     tempDir: File,
-    processorType: ProcessorType = ProcessorType.KAPT
+    processorType: ProcessorType
 ): KClass<out Any> {
     val compilationResult = when (processorType) {
         ProcessorType.KAPT -> prepareCompilation(source, tempDir, processorType).compile()
@@ -83,13 +83,13 @@ fun debugPrintGenerated(compilationResult: KotlinCompilation.Result) {
 fun prepareCompilation(
     sourceFile: SourceFile,
     tempDir: File,
-    processorType: ProcessorType = ProcessorType.KAPT //todo only temp default
+    processorType: ProcessorType
 ) = prepareCompilation(listOf(sourceFile), tempDir, processorType)
 
 fun prepareCompilation(
     sourceFiles: List<SourceFile>,
     tempDir: File,
-    processorType: ProcessorType = ProcessorType.KAPT
+    processorType: ProcessorType
 ) = KotlinCompilation()
     .apply {
         workingDir = tempDir

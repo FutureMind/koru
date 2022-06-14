@@ -12,8 +12,8 @@ class FunctionReturnTypeConversionTest {
     @TempDir
     lateinit var tempDir: File
 
-    @Test
-    fun `should generate wrappers for suspend functions`() {
+    @ProcessorTest
+    fun `should generate wrappers for suspend functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -34,7 +34,8 @@ class FunctionReturnTypeConversionTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.SuspendExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedClass.memberReturnType("doSth") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Unit>"
@@ -42,8 +43,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
-    @Test
-    fun `should generate wrappers for blocking functions`() {
+    @ProcessorTest
+    fun `should generate wrappers for blocking functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -64,7 +65,8 @@ class FunctionReturnTypeConversionTest {
             """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.BlockingExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedClass.memberReturnType("doSth") shouldBe "kotlin.Unit"
@@ -72,8 +74,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
     }
 
-    @Test
-    fun `should generate wrappers for Flow returning functions`() {
+    @ProcessorTest
+    fun `should generate wrappers for Flow returning functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -95,7 +97,8 @@ class FunctionReturnTypeConversionTest {
             """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.FlowExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedClass.memberReturnType("doSth") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Unit>"
@@ -103,8 +106,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
-    @Test
-    fun `should generate wrappers for SharedFlow, StateFlow etc returning functions`() {
+    @ProcessorTest
+    fun `should generate wrappers for SharedFlow, StateFlow etc returning functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -129,7 +132,8 @@ class FunctionReturnTypeConversionTest {
             """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.VariousFlowExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedClass.memberReturnType("stateFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
@@ -138,8 +142,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("mutableSharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should generate wrappers for properties`() {
+    @ProcessorTest
+    fun `should generate wrappers for properties`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -164,7 +168,8 @@ class FunctionReturnTypeConversionTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.PropertiesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedClass.memberReturnType("someVal") shouldBe "kotlin.Float"
