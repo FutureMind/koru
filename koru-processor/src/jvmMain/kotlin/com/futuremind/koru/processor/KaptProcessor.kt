@@ -128,7 +128,7 @@ class KaptProcessor : AbstractProcessor() {
         val typeName = element.getClassName(processingEnv)
         val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeInterface::class.java)
-        val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
+        val newTypeName = interfaceName(annotation, typeName.simpleName)
 
         println("KAPT: \n$typeSpec")
 
@@ -158,8 +158,7 @@ class KaptProcessor : AbstractProcessor() {
         val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeClass::class.java)
 
-        val generatedClassName =
-            annotation.name.nonEmptyOr("${originalTypeName.simpleName}Native")
+        val generatedClassName = className(annotation, originalTypeName.simpleName)
 
         val classToGenerateSpec = WrapperClassBuilder(
             originalTypeName = originalTypeName,

@@ -87,8 +87,8 @@ class TypesGenerationTest {
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should generate class from interface via @ToNativeClass`() {
+    @ProcessorTest
+    fun `should generate class from interface via @ToNativeClass`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -110,7 +110,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.ClassGenerationExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe false

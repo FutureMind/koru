@@ -2,6 +2,7 @@ package com.futuremind.koru.processor
 
 import com.futuremind.koru.ExportedScopeProvider
 import com.futuremind.koru.ScopeProvider
+import com.futuremind.koru.ToNativeClass
 import com.futuremind.koru.ToNativeInterface
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
@@ -37,6 +38,9 @@ class KspProcessor(
         val interfaceSymbols = resolver
             .getSymbolsWithAnnotation(ToNativeInterface::class.qualifiedName!!)
 
+        val classSymbols = resolver
+            .getSymbolsWithAnnotation(ToNativeClass::class.qualifiedName!!)
+
         scopeProvidersSymbols
             .filter { it is KSClassDeclaration && it.validate() }
             .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
@@ -50,43 +54,22 @@ class KspProcessor(
             .sortByInheritance()
             .forEach { classDeclaration ->
 
-                val builder = when (classDeclaration.isAbstract()) {
-                    true -> TypeSpec.interfaceBuilder(classDeclaration.toClassName())
-                    false -> TypeSpec.classBuilder(classDeclaration.toClassName())
-                }
-
-                val originalTypeSpec = builder
-                    .addModifiers(classDeclaration.modifiers.map { it.toKModifier()!! })
-                    .addSuperinterfaces(
-                        classDeclaration.superTypes.toList().map { it.toTypeName() }
-                    )
-                    .addFunctions(
-                        classDeclaration.getDeclaredFunctions()
-                            .filterNot { it.isConstructor() }
-                            .toList()
-                            .map { it.toFunSpec() }
-                    )
-                    .addProperties(
-                        classDeclaration.getDeclaredProperties()
-                            .toList()
-                            .map { it.toPropertySpec() }
-                    )
-                    .build()
+                val originalTypeSpec = classDeclaration.toTypeSpec()
 
                 val annotation =
                     classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
-                val typeName = classDeclaration.toClassName()
-                val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
+                val originalTypeName = classDeclaration.toClassName()
+                val newTypeName = interfaceName(annotation, originalTypeName.simpleName)
 
                 val generatedType = WrapperInterfaceBuilder(
-                    originalTypeName = typeName,
+                    originalTypeName = originalTypeName,
                     originalTypeSpec = originalTypeSpec,
                     newTypeName = newTypeName,
                     generatedInterfaces = generatedInterfaces
                 ).build()
 
-                generatedInterfaces[typeName] = GeneratedInterface(
-                    ClassName(typeName.packageName, newTypeName),
+                generatedInterfaces[originalTypeName] = GeneratedInterface(
+                    ClassName(originalTypeName.packageName, newTypeName),
                     generatedType
                 )
 
@@ -95,18 +78,73 @@ class KspProcessor(
                 println("KSP: \n${originalTypeSpec}")
                 println("KSP gen: \n${generatedType}")
 
-                FileSpec.builder(typeName.packageName, newTypeName)
+                FileSpec.builder(originalTypeName.packageName, newTypeName)
                     .addType(generatedType)
                     .build()
                     .writeTo(codeGenerator, Dependencies(aggregating = false))
 
             }
 
-        val unableToProcess = (scopeProvidersSymbols + interfaceSymbols)
+        classSymbols
+            .filterIsInstance<KSClassDeclaration>()
+            .filter { it.validate() }
+            .toList()
+            .forEach { classDeclaration ->
+
+                val originalTypeSpec = classDeclaration.toTypeSpec()
+
+                val annotation =
+                    classDeclaration.getAnnotationsByType(ToNativeClass::class).first()
+                val originalTypeName = classDeclaration.toClassName()
+                val newTypeName = className(annotation, originalTypeName.simpleName)
+
+                val generatedType = WrapperClassBuilder(
+                    originalTypeName = originalTypeName,
+                    originalTypeSpec = originalTypeSpec,
+                    newTypeName = newTypeName,
+                    generatedInterfaces = generatedInterfaces,
+                    scopeProviderMemberName = null, //TODO obtainScopeProviderMemberName(annotation, scopeProviders),
+                    freezeWrapper = annotation.freeze
+                ).build()
+
+                FileSpec.builder(originalTypeName.packageName, newTypeName)
+                    .addType(generatedType)
+                    .build()
+                    .writeTo(codeGenerator, Dependencies(aggregating = false))
+
+            }
+
+        val unableToProcess = (scopeProvidersSymbols + interfaceSymbols + classSymbols)
             .filterNot { it.validate() }
 
         return unableToProcess.toList()
 
+    }
+
+    //todo extract
+    private fun KSClassDeclaration.toTypeSpec(): TypeSpec {
+        val builder = when (this.isAbstract()) {
+            true -> TypeSpec.interfaceBuilder(this.toClassName())
+            false -> TypeSpec.classBuilder(this.toClassName())
+        }
+
+        return builder
+            .addModifiers(modifiers.map { it.toKModifier()!! })
+            .addSuperinterfaces(
+                superTypes.toList().map { it.toTypeName() }
+            )
+            .addFunctions(
+                getDeclaredFunctions()
+                    .filterNot { it.isConstructor() }
+                    .toList()
+                    .map { it.toFunSpec() }
+            )
+            .addProperties(
+                getDeclaredProperties()
+                    .toList()
+                    .map { it.toPropertySpec() }
+            )
+            .build()
     }
 
     private fun KSFunctionDeclaration.toFunSpec(): FunSpec =
