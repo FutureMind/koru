@@ -101,7 +101,8 @@ class KaptProcessor : AbstractProcessor() {
 
         val originalClassName = element.getClassName(processingEnv)
         val scopeProviderClassName = ClassName(packageName, scopeClassSpec.name.toString())
-        val scopePropertyName = "exportedScopeProvider_"+ scopeClassSpec.name!!.replaceFirstChar { it.lowercase(Locale.ROOT) }
+        val scopePropertyName =
+            "exportedScopeProvider_" + scopeClassSpec.name!!.replaceFirstChar { it.lowercase(Locale.ROOT) }
         val propertySpec = ScopeProviderBuilder(
             scopeProviderClassName,
             scopePropertyName
@@ -205,7 +206,7 @@ class KaptProcessor : AbstractProcessor() {
 
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
-            throw IllegalStateException("ExportedScopeProvider can only be applied to a class extending ScopeProvider interface")
+            wrongScopeProviderSupertype()
         }
     }
 

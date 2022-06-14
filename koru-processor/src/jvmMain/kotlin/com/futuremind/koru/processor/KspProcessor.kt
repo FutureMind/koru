@@ -1,6 +1,7 @@
 package com.futuremind.koru.processor
 
 import com.futuremind.koru.ExportedScopeProvider
+import com.futuremind.koru.ScopeProvider
 import com.futuremind.koru.ToNativeInterface
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
@@ -49,14 +50,15 @@ class KspProcessor(
             .sortByInheritance()
             .forEach { classDeclaration ->
 
-                val builder = when(classDeclaration.isAbstract()){
+                val builder = when (classDeclaration.isAbstract()) {
                     true -> TypeSpec.interfaceBuilder(classDeclaration.toClassName())
                     false -> TypeSpec.classBuilder(classDeclaration.toClassName())
                 }
 
                 val originalTypeSpec = builder
                     .addModifiers(classDeclaration.modifiers.map { it.toKModifier()!! })
-                    .addSuperinterfaces(classDeclaration.superTypes.toList().map { it.toTypeName() })
+                    .addSuperinterfaces(
+                        classDeclaration.superTypes.toList().map { it.toTypeName() })
                     .addFunctions(
                         classDeclaration.getDeclaredFunctions()
                             .filterNot { it.isConstructor() }
@@ -64,7 +66,8 @@ class KspProcessor(
                             .map { it.toFunSpec() }
                     ).build()
 
-                val annotation = classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
+                val annotation =
+                    classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
                 val typeName = classDeclaration.toClassName()
                 val newTypeName = annotation.name.nonEmptyOr("${typeName.simpleName}NativeProtocol")
 
@@ -99,7 +102,7 @@ class KspProcessor(
 
     }
 
-    private fun KSFunctionDeclaration.toFunSpec() : FunSpec =
+    private fun KSFunctionDeclaration.toFunSpec(): FunSpec =
         FunSpec.builder(this.simpleName.asString())
             .addModifiers(this.modifiers.map { it.toKModifier()!! })
             .addParameters(this.parameters.map { it.toParameterSpec() })
@@ -107,9 +110,9 @@ class KspProcessor(
             .build()
 
     private fun KSValueParameter.toParameterSpec() = ParameterSpec.builder(
-            name = this.name!!.getShortName(),
-            type = this.type.toTypeName()
-        ).build()
+        name = this.name!!.getShortName(),
+        type = this.type.toTypeName()
+    ).build()
 
     inner class ScopeProviderVisitor(private val codeGenerator: CodeGenerator) : KSVisitorVoid() {
 
@@ -120,13 +123,31 @@ class KspProcessor(
             val scopePropertyName = "exportedScopeProvider_" +
                     scopeProviderClassName.simpleName.replaceFirstChar { it.lowercase(Locale.ROOT) }
 
-            val propertySpec = ScopeProviderBuilder(scopeProviderClassName, scopePropertyName).build()
+            classDeclaration.assertExtendsScopeProvider()
+
+            val propertySpec = ScopeProviderBuilder(
+                scopeProviderClassName,
+                scopePropertyName
+            ).build()
 
             FileSpec
-                .builder(scopeProviderClassName.packageName, "${scopeProviderClassName.simpleName}Container")
+                .builder(
+                    scopeProviderClassName.packageName,
+                    "${scopeProviderClassName.simpleName}Container"
+                )
                 .addProperty(propertySpec)
                 .build()
                 .writeTo(codeGenerator, Dependencies(aggregating = false))
+        }
+
+        private fun KSClassDeclaration.assertExtendsScopeProvider() {
+            if (superTypes.toList()
+                    .map { it.toTypeName() }
+                    .contains(ScopeProvider::class.asTypeName())
+                    .not()
+            ) {
+                wrongScopeProviderSupertype()
+            }
         }
 
     }
