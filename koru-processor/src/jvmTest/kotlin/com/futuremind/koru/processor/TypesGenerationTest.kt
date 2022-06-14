@@ -52,8 +52,8 @@ class TypesGenerationTest {
     }
 
 
-    @Test
-    fun `should generate interface from class via @ToNativeInterface`() {
+    @ProcessorTest
+    fun `should generate interface from class via @ToNativeInterface`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -75,7 +75,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.InterfaceGenerationExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe true

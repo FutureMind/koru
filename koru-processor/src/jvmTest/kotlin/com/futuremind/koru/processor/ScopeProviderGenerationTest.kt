@@ -56,7 +56,7 @@ class ScopeProviderGenerationTest {
 
         val compilationResult = prepareCompilation(source, tempDir, processorType).compile()
 
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -171,10 +171,10 @@ class ScopeProviderGenerationTest {
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
 
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"

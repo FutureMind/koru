@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
+//TODO to be removed when no longer necessary
 class ScopeProviderKspGenerationTest {
 
     @TempDir
@@ -34,9 +35,9 @@ class ScopeProviderKspGenerationTest {
             """
         )
 
-        val compilationResult = prepareKspCompilation(listOf(source), tempDir).compile()
+        val compilationResult = prepareCompilation(listOf(source), tempDir, ProcessorType.KSP).compile()
 
-        val generatedScopeProvider = kspGeneratedSources(tempDir)
+        val generatedScopeProvider = compilationResult.generatedFiles(ProcessorType.KSP, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -52,7 +53,7 @@ class ScopeProviderKspGenerationTest {
     @Test
     fun `should generate complex inheritance hierarchy`() {
 
-        val generatedType = compileAndReturnKspGeneratedClass(
+        val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
                 "multipleSuperInterfaces3.kt",
                 """
@@ -102,7 +103,8 @@ class ScopeProviderKspGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = ProcessorType.KSP
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
