@@ -15,7 +15,6 @@ import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.MirroredTypeException
 import javax.tools.Diagnostic.Kind.ERROR
 
 
@@ -165,7 +164,7 @@ class KaptProcessor : AbstractProcessor() {
             originalTypeSpec = typeSpec,
             newTypeName = generatedClassName,
             generatedInterfaces = generatedInterfaces,
-            scopeProviderMemberName = obtainScopeProviderMemberName(annotation, scopeProviders),
+            scopeProviderMemberName = findMatchingScopeProvider(annotation.launchOnScopeTypeName(), scopeProviders),
             freezeWrapper = annotation.freeze
         ).build()
 
@@ -174,33 +173,6 @@ class KaptProcessor : AbstractProcessor() {
             .build()
             .writeTo(File(kaptGeneratedDir))
 
-    }
-
-    private fun obtainScopeProviderMemberName(
-        annotation: ToNativeClass,
-        availableScopeProviders: Map<ClassName, PropertySpec>
-    ): MemberName? {
-        //this is the dirtiest hack ever but it works :O
-        //there probably is some way of doing this via kotlinpoet-metadata
-        //https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
-        var scopeProviderTypeName: TypeName? = null
-        try {
-            annotation.launchOnScope
-        } catch (e: MirroredTypeException) {
-            scopeProviderTypeName = e.typeMirror.asTypeName()
-        }
-        if (scopeProviderTypeName != null
-            && scopeProviderTypeName != NoScopeProvider::class.asTypeName()
-            && availableScopeProviders[scopeProviderTypeName] == null
-        ) {
-            throw IllegalStateException("$scopeProviderTypeName can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider")
-        }
-        return availableScopeProviders[scopeProviderTypeName]?.let {
-            MemberName(
-                packageName = (scopeProviderTypeName as ClassName).packageName,
-                simpleName = it.name
-            )
-        }
     }
 
     private fun TypeSpec.assertExtendsScopeProvider() {
