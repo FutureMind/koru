@@ -7,7 +7,7 @@ class WrapperInterfaceBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
-    generatedInterfaces: Map<TypeName, GeneratedInterface>,
+    generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
 ) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     private val functions = originalTypeSpec.funSpecs

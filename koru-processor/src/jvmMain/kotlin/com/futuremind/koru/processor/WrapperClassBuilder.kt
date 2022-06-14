@@ -9,7 +9,7 @@ import com.squareup.kotlinpoet.*
 class WrapperClassBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
-    generatedInterfaces: Map<TypeName, GeneratedInterface>,
+    generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
     private val newTypeName: String,
     private val scopeProviderMemberName: MemberName?,
     private val freezeWrapper: Boolean

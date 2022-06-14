@@ -43,40 +43,59 @@ class KaptProcessor : AbstractProcessor() {
             processingEnv.typeUtils
         )
 
-        val scopeProviders: Map<ClassName, PropertySpec> = roundEnv
+        val scopeProviders = mutableMapOf<ClassName, PropertySpec>()
+        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterfaceSpec>()
+
+        roundEnv
             .getElementsAnnotatedWith(ExportedScopeProvider::class.java)
+            .asSequence()
             .map { element ->
                 generateScopeProvider(
                     element = element,
-                    classInspector = classInspector,
-                    targetDir = kaptGeneratedDir
+                    classInspector = classInspector
                 )
             }
-            .toMap()
-
-        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterface>()
+            .forEach {
+                scopeProviders[it.newTypeName] = it.newSpec
+                kaptGeneratedDir.writeFile(
+                    packageName = it.newTypeName.packageName,
+                    fileName = it.newTypeName.simpleName + "Container"
+                ) { addProperty(it.newSpec) }
+            }
 
         roundEnv.getElementsAnnotatedWith(ToNativeInterface::class.java)
             .sortByInheritance(classInspector, processingEnv)
-            .forEach { element ->
-                val (typeName, generatedInterface) = generateInterface(
+            .asSequence()
+            .map { element ->
+                generateInterface(
                     element = element,
                     classInspector = classInspector,
                     generatedInterfaces = generatedInterfaces,
-                    targetDir = kaptGeneratedDir
                 )
-                generatedInterfaces[typeName] = generatedInterface
+            }
+            .forEach {
+                generatedInterfaces[it.originalTypeName] = it
+                kaptGeneratedDir.writeFile(
+                    packageName = it.newTypeName.packageName,
+                    fileName = it.newTypeName.simpleName
+                ) { addType(it.newSpec) }
             }
 
         roundEnv.getElementsAnnotatedWith(ToNativeClass::class.java)
-            .forEach { element ->
+            .asSequence()
+            .map { element ->
                 generateWrappedClasses(
                     element = element,
                     classInspector = classInspector,
                     generatedInterfaces = generatedInterfaces,
-                    scopeProviders = scopeProviders,
-                    kaptGeneratedDir = kaptGeneratedDir
+                    scopeProviders = scopeProviders
                 )
+            }
+            .forEach {
+                kaptGeneratedDir.writeFile(
+                    packageName = it.newTypeName.packageName,
+                    fileName = it.newTypeName.simpleName
+                ) { addType(it.newSpec) }
             }
 
         true
@@ -89,91 +108,99 @@ class KaptProcessor : AbstractProcessor() {
 
     private fun generateScopeProvider(
         element: Element,
-        classInspector: ClassInspector,
-        targetDir: String
-    ): Pair<ClassName, PropertySpec> {
+        classInspector: ClassInspector
+    ): GeneratedPropertySpec {
 
         val packageName = element.getPackage(processingEnv)
         val scopeClassSpec = (element as TypeElement).toTypeSpec(classInspector)
-
-        scopeClassSpec.assertExtendsScopeProvider()
-
         val originalClassName = element.getClassName(processingEnv)
         val scopeProviderClassName = ClassName(packageName, scopeClassSpec.name.toString())
         val scopePropertyName =
             "exportedScopeProvider_" + scopeClassSpec.name!!.replaceFirstChar { it.lowercase(Locale.ROOT) }
-        val propertySpec = ScopeProviderBuilder(
+
+        scopeClassSpec.assertExtendsScopeProvider()
+
+        val newPropertySpec = ScopeProviderBuilder(
             scopeProviderClassName,
             scopePropertyName
         ).build()
 
-        FileSpec
-            .builder(originalClassName.packageName, "${originalClassName.simpleName}Container")
-            .addProperty(propertySpec)
-            .build()
-            .writeTo(File(targetDir))
-
-        return originalClassName to propertySpec
+        return GeneratedPropertySpec(
+            originalTypeName = originalClassName,
+            newTypeName = originalClassName,
+            newSpec = newPropertySpec
+        )
 
     }
 
     private fun generateInterface(
         element: Element,
         classInspector: ClassInspector,
-        generatedInterfaces: Map<TypeName, GeneratedInterface>,
-        targetDir: String
-    ): Pair<TypeName, GeneratedInterface> {
+        generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>
+    ): GeneratedInterfaceSpec {
 
-        val typeName = element.getClassName(processingEnv)
-        val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
+        val originalTypeName = element.getClassName(processingEnv)
+        val originalTypeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeInterface::class.java)
-        val newTypeName = interfaceName(annotation, typeName.simpleName)
+        val newTypeName = interfaceName(annotation, originalTypeName.simpleName)
 
-        println("KAPT: \n$typeSpec")
+        val newTypeSpec = WrapperInterfaceBuilder(
+            originalTypeName = originalTypeName,
+            originalTypeSpec = originalTypeSpec,
+            newTypeName = newTypeName,
+            generatedInterfaces = generatedInterfaces
+        ).build()
 
-        val generatedType =
-            WrapperInterfaceBuilder(typeName, typeSpec, newTypeName, generatedInterfaces).build()
+        val newInterfaceName = ClassName(originalTypeName.packageName, newTypeName)
 
-        FileSpec.builder(typeName.packageName, newTypeName)
-            .addType(generatedType)
-            .build()
-            .writeTo(File(targetDir))
-
-        val newInterfaceName = ClassName(typeName.packageName, newTypeName)
-
-        return typeName to GeneratedInterface(newInterfaceName, generatedType)
+        return GeneratedInterfaceSpec(
+            originalTypeName = originalTypeName,
+            newTypeName = newInterfaceName,
+            newSpec = newTypeSpec
+        )
 
     }
 
     private fun generateWrappedClasses(
         element: Element,
         classInspector: ClassInspector,
-        generatedInterfaces: Map<TypeName, GeneratedInterface>,
-        scopeProviders: Map<ClassName, PropertySpec>,
-        kaptGeneratedDir: String
-    ) {
+        generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
+        scopeProviders: Map<ClassName, PropertySpec>
+    ): GeneratedClassSpec {
 
         val originalTypeName = element.getClassName(processingEnv)
-        val typeSpec = (element as TypeElement).toTypeSpec(classInspector)
+        val originalTypeSpec = (element as TypeElement).toTypeSpec(classInspector)
         val annotation = element.getAnnotation(ToNativeClass::class.java)
+        val newTypeName = className(annotation, originalTypeName.simpleName)
 
-        val generatedClassName = className(annotation, originalTypeName.simpleName)
-
-        val classToGenerateSpec = WrapperClassBuilder(
+        val newTypeSpec = WrapperClassBuilder(
             originalTypeName = originalTypeName,
-            originalTypeSpec = typeSpec,
-            newTypeName = generatedClassName,
+            originalTypeSpec = originalTypeSpec,
+            newTypeName = newTypeName,
             generatedInterfaces = generatedInterfaces,
-            scopeProviderMemberName = findMatchingScopeProvider(annotation.launchOnScopeTypeName(), scopeProviders),
+            scopeProviderMemberName = findMatchingScopeProvider(
+                annotation.launchOnScopeTypeName(),
+                scopeProviders
+            ),
             freezeWrapper = annotation.freeze
         ).build()
 
-        FileSpec.builder(originalTypeName.packageName, generatedClassName)
-            .addType(classToGenerateSpec)
-            .build()
-            .writeTo(File(kaptGeneratedDir))
+        return GeneratedClassSpec(
+            originalTypeName = originalTypeName,
+            newTypeName = ClassName(originalTypeName.packageName, newTypeName),
+            newSpec = newTypeSpec
+        )
 
     }
+
+    private fun String.writeFile(
+        packageName: String,
+        fileName: String,
+        builder: FileSpec.Builder.() -> FileSpec.Builder
+    ) = FileSpec.builder(packageName, fileName)
+        .builder()
+        .build()
+        .writeTo(File(this))
 
     private fun TypeSpec.assertExtendsScopeProvider() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
@@ -183,10 +210,10 @@ class KaptProcessor : AbstractProcessor() {
 
 }
 
+//TODO refactor
+
 internal fun Element.getPackage(processingEnv: ProcessingEnvironment) =
     processingEnv.elementUtils.getPackageOf(this).toString()
 
 internal fun Element.getClassName(processingEnv: ProcessingEnvironment) =
     ClassName(this.getPackage(processingEnv), this.simpleName.toString())
-
-data class GeneratedInterface(val name: TypeName, val typeSpec: TypeSpec)

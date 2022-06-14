@@ -12,6 +12,7 @@ import com.squareup.kotlinpoet.ksp.*
 import java.util.*
 import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
+import kotlin.reflect.KClass
 
 
 class KoruProcessorProvider : SymbolProcessorProvider {
@@ -32,87 +33,64 @@ class KspProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
 
-        val scopeProvidersSymbols = resolver
-            .getSymbolsWithAnnotation(ExportedScopeProvider::class.qualifiedName!!)
+        val scopeProvidersSymbols = resolver.getClassDeclarationsOf(ExportedScopeProvider::class)
+        val interfaceSymbols = resolver.getClassDeclarationsOf(ToNativeInterface::class)
+        val classSymbols = resolver.getClassDeclarationsOf(ToNativeClass::class)
 
-        val interfaceSymbols = resolver
-            .getSymbolsWithAnnotation(ToNativeInterface::class.qualifiedName!!)
-
-        val classSymbols = resolver
-            .getSymbolsWithAnnotation(ToNativeClass::class.qualifiedName!!)
+        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterfaceSpec>()
 
         scopeProvidersSymbols
-            .filter { it is KSClassDeclaration && it.validate() }
             .forEach { it.accept(ScopeProviderVisitor(codeGenerator), Unit) }
 
-        val generatedInterfaces = mutableMapOf<TypeName, GeneratedInterface>()
+        interfaceSymbols.sortByInheritance().forEach { classDeclaration ->
 
-        interfaceSymbols
-            .filterIsInstance<KSClassDeclaration>()
-            .filter { it.validate() }
-            .toList()
-            .sortByInheritance()
-            .forEach { classDeclaration ->
+            val originalTypeSpec = classDeclaration.toTypeSpec()
+            val annotation = classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
+            val originalTypeName = classDeclaration.toClassName()
+            val newTypeName = interfaceName(annotation, originalTypeName.simpleName)
 
-                val originalTypeSpec = classDeclaration.toTypeSpec()
+            val generatedType = WrapperInterfaceBuilder(
+                originalTypeName = originalTypeName,
+                originalTypeSpec = originalTypeSpec,
+                newTypeName = newTypeName,
+                generatedInterfaces = generatedInterfaces
+            ).build()
 
-                val annotation =
-                    classDeclaration.getAnnotationsByType(ToNativeInterface::class).first()
-                val originalTypeName = classDeclaration.toClassName()
-                val newTypeName = interfaceName(annotation, originalTypeName.simpleName)
+            generatedInterfaces[originalTypeName] = GeneratedInterfaceSpec(
+                originalTypeName,
+                ClassName(originalTypeName.packageName, newTypeName),
+                generatedType
+            )
 
-                val generatedType = WrapperInterfaceBuilder(
-                    originalTypeName = originalTypeName,
-                    originalTypeSpec = originalTypeSpec,
-                    newTypeName = newTypeName,
-                    generatedInterfaces = generatedInterfaces
-                ).build()
+            codeGenerator.writeFile(
+                packageName = originalTypeName.packageName,
+                fileName = newTypeName
+            ) { addType(generatedType) }
 
-                generatedInterfaces[originalTypeName] = GeneratedInterface(
-                    ClassName(originalTypeName.packageName, newTypeName),
-                    generatedType
-                )
+        }
 
-                //add generated
+        classSymbols.forEach { classDeclaration ->
 
-                println("KSP: \n${originalTypeSpec}")
-                println("KSP gen: \n${generatedType}")
+            val originalTypeSpec = classDeclaration.toTypeSpec()
+            val annotation = classDeclaration.getAnnotationsByType(ToNativeClass::class).first()
+            val originalTypeName = classDeclaration.toClassName()
+            val newTypeName = className(annotation, originalTypeName.simpleName)
 
-                FileSpec.builder(originalTypeName.packageName, newTypeName)
-                    .addType(generatedType)
-                    .build()
-                    .writeTo(codeGenerator, Dependencies(aggregating = false))
+            val generatedType = WrapperClassBuilder(
+                originalTypeName = originalTypeName,
+                originalTypeSpec = originalTypeSpec,
+                newTypeName = newTypeName,
+                generatedInterfaces = generatedInterfaces,
+                scopeProviderMemberName = null, //TODO obtainScopeProviderMemberName(annotation, scopeProviders),
+                freezeWrapper = annotation.freeze
+            ).build()
 
-            }
+            codeGenerator.writeFile(
+                packageName = originalTypeName.packageName,
+                fileName = newTypeName
+            ) { addType(generatedType) }
 
-        classSymbols
-            .filterIsInstance<KSClassDeclaration>()
-            .filter { it.validate() }
-            .toList()
-            .forEach { classDeclaration ->
-
-                val originalTypeSpec = classDeclaration.toTypeSpec()
-
-                val annotation =
-                    classDeclaration.getAnnotationsByType(ToNativeClass::class).first()
-                val originalTypeName = classDeclaration.toClassName()
-                val newTypeName = className(annotation, originalTypeName.simpleName)
-
-                val generatedType = WrapperClassBuilder(
-                    originalTypeName = originalTypeName,
-                    originalTypeSpec = originalTypeSpec,
-                    newTypeName = newTypeName,
-                    generatedInterfaces = generatedInterfaces,
-                    scopeProviderMemberName = null, //TODO obtainScopeProviderMemberName(annotation, scopeProviders),
-                    freezeWrapper = annotation.freeze
-                ).build()
-
-                FileSpec.builder(originalTypeName.packageName, newTypeName)
-                    .addType(generatedType)
-                    .build()
-                    .writeTo(codeGenerator, Dependencies(aggregating = false))
-
-            }
+        }
 
         val unableToProcess = (scopeProvidersSymbols + interfaceSymbols + classSymbols)
             .filterNot { it.validate() }
@@ -120,6 +98,21 @@ class KspProcessor(
         return unableToProcess.toList()
 
     }
+
+    private fun Resolver.getClassDeclarationsOf(clazz: KClass<out Annotation>) =
+        getSymbolsWithAnnotation(clazz.qualifiedName!!)
+            .filterIsInstance<KSClassDeclaration>()
+            .filter { it.validate() }
+            .toList()
+
+    private fun CodeGenerator.writeFile(
+        packageName: String,
+        fileName: String,
+        builder: FileSpec.Builder.() -> FileSpec.Builder
+    ) = FileSpec.builder(packageName, fileName)
+        .builder()
+        .build()
+        .writeTo(this, Dependencies(aggregating = false))
 
     //todo extract
     private fun KSClassDeclaration.toTypeSpec(): TypeSpec {
@@ -159,7 +152,7 @@ class KspProcessor(
         type = this.type.toTypeName()
     ).build()
 
-    private fun KSPropertyDeclaration.toPropertySpec() : PropertySpec =
+    private fun KSPropertyDeclaration.toPropertySpec(): PropertySpec =
         PropertySpec.builder(simpleName.asString(), type.toTypeName())
             .addModifiers(modifiers.map { it.toKModifier()!! })
             .build()
@@ -180,14 +173,11 @@ class KspProcessor(
                 scopePropertyName
             ).build()
 
-            FileSpec
-                .builder(
-                    scopeProviderClassName.packageName,
-                    "${scopeProviderClassName.simpleName}Container"
-                )
-                .addProperty(propertySpec)
-                .build()
-                .writeTo(codeGenerator, Dependencies(aggregating = false))
+            codeGenerator.writeFile(
+                packageName = scopeProviderClassName.packageName,
+                fileName = "${scopeProviderClassName.simpleName}Container"
+            ) { addProperty(propertySpec) }
+
         }
 
         private fun KSClassDeclaration.assertExtendsScopeProvider() {
