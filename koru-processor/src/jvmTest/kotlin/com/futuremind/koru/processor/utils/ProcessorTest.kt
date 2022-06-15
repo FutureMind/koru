@@ -1,4 +1,4 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.utils
 
 import org.junit.jupiter.api.TestTemplate
 import org.junit.jupiter.api.extension.*

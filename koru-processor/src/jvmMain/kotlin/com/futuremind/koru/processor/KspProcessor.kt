@@ -4,11 +4,20 @@ import com.futuremind.koru.ExportedScopeProvider
 import com.futuremind.koru.ScopeProvider
 import com.futuremind.koru.ToNativeClass
 import com.futuremind.koru.ToNativeInterface
-import com.google.devtools.ksp.*
+import com.futuremind.koru.processor.builders.ScopeProviderBuilder
+import com.futuremind.koru.processor.builders.WrapperClassBuilder
+import com.futuremind.koru.processor.builders.WrapperInterfaceBuilder
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ksp.*
+import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
+import com.squareup.kotlinpoet.ksp.writeTo
 import java.util.*
 import kotlin.reflect.KClass
 

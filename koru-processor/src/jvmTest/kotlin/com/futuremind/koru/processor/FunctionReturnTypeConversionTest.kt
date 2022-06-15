@@ -1,8 +1,8 @@
 package com.futuremind.koru.processor
 
+import com.futuremind.koru.processor.utils.*
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 

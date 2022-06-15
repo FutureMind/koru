@@ -2,12 +2,38 @@ package com.futuremind.koru.processor
 
 import com.futuremind.koru.NoScopeProvider
 import com.futuremind.koru.ToNativeClass
+import com.futuremind.koru.ToNativeInterface
 import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.KspExperimental
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toTypeName
 import javax.lang.model.type.MirroredTypeException
+
+fun interfaceName(
+    annotation: ToNativeInterface,
+    originalTypeName: String
+) = annotation.name.ifEmpty { "${originalTypeName}NativeProtocol" }
+
+fun className(
+    annotation: ToNativeClass,
+    originalTypeName: String
+) = annotation.name.ifEmpty { "${originalTypeName}Native" }
+
+fun findMatchingScopeProvider(
+    scopeProviderTypeName: TypeName?,
+    availableScopeProviders: Map<ClassName, PropertySpec>
+): MemberName? {
+    if (scopeProviderTypeName != null && availableScopeProviders[scopeProviderTypeName] == null) {
+        requiredExportOfScopeProvider(scopeProviderTypeName)
+    }
+    return availableScopeProviders[scopeProviderTypeName]?.let {
+        MemberName(
+            packageName = (scopeProviderTypeName as ClassName).packageName,
+            simpleName = it.name
+        )
+    }
+}
 
 @OptIn(KspExperimental::class, KotlinPoetKspPreview::class)
 fun ToNativeClass.launchOnScopeTypeName(): TypeName? {
@@ -25,3 +51,4 @@ fun ToNativeClass.launchOnScopeTypeName(): TypeName? {
     if (scopeProviderTypeName == NoScopeProvider::class.asTypeName()) return null
     return scopeProviderTypeName
 }
+

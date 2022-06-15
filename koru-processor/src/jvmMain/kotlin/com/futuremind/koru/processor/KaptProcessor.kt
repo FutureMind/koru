@@ -1,6 +1,12 @@
 package com.futuremind.koru.processor
 
-import com.futuremind.koru.*
+import com.futuremind.koru.ExportedScopeProvider
+import com.futuremind.koru.ScopeProvider
+import com.futuremind.koru.ToNativeClass
+import com.futuremind.koru.ToNativeInterface
+import com.futuremind.koru.processor.builders.ScopeProviderBuilder
+import com.futuremind.koru.processor.builders.WrapperClassBuilder
+import com.futuremind.koru.processor.builders.WrapperInterfaceBuilder
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector

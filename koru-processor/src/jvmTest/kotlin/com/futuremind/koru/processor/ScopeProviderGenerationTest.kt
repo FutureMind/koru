@@ -1,5 +1,6 @@
 package com.futuremind.koru.processor
 
+import com.futuremind.koru.processor.utils.*
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe

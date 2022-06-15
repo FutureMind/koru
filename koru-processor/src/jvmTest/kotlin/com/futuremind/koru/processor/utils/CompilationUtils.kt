@@ -1,6 +1,11 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.utils
 
-import com.tschuchort.compiletesting.*
+import com.futuremind.koru.processor.KaptProcessor
+import com.futuremind.koru.processor.KoruProcessorProvider
+import com.tschuchort.compiletesting.KotlinCompilation
+import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.kspIncremental
+import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.io.File
@@ -48,6 +53,38 @@ fun compileAndReturnGeneratedClass(
     return generatedClass.kotlin
 }
 
+private fun prepareCompilation(
+    sourceFiles: List<SourceFile>,
+    tempDir: File,
+    processorType: ProcessorType
+) = KotlinCompilation().apply {
+    workingDir = tempDir
+    inheritClassPath = true
+    sources = sourceFiles
+    verbose = false
+    when (processorType) {
+        ProcessorType.KAPT -> {
+            annotationProcessors = listOf(KaptProcessor())
+        }
+        ProcessorType.KSP -> {
+            symbolProcessorProviders = listOf(KoruProcessorProvider())
+            kspIncremental = false
+        }
+    }
+}
+
+fun KotlinCompilation.Result.generatedFiles(
+    processorType: ProcessorType,
+    tempDir: File
+) = when (processorType) {
+    ProcessorType.KAPT -> this.generatedFiles
+    ProcessorType.KSP -> kspGeneratedSources(tempDir)
+}
+
+fun Collection<File>.getContentByFilename(filename: String) = this
+    .find { it.name == filename }!!
+    .readText()
+    .trim()
 
 /**
  * Double compilation hack taken from
@@ -76,49 +113,6 @@ private object KSPRuntimeCompiler {
             .filter { it.isFile }
             .map { SourceFile.fromPath(it.absoluteFile) }
             .toList()
-}
-
-private fun prepareCompilation(
-    sourceFiles: List<SourceFile>,
-    tempDir: File,
-    processorType: ProcessorType
-) = KotlinCompilation()
-    .apply {
-        workingDir = tempDir
-        inheritClassPath = true
-        sources = sourceFiles
-        verbose = false
-        when (processorType) {
-            ProcessorType.KAPT -> {
-                annotationProcessors = listOf(KaptProcessor())
-            }
-            ProcessorType.KSP -> {
-                symbolProcessorProviders = listOf(KoruProcessorProvider())
-                kspIncremental = false
-            }
-        }
-    }
-
-
-fun KClass<*>.member(methodName: String) =
-    members.find { it.name == methodName }!!
-
-fun KClass<*>.memberReturnType(methodName: String) = member(methodName).returnType.toString()
-
-fun Collection<File>.getContentByFilename(filename: String) = this
-    .find { it.name == filename }!!
-    .readText()
-    .trim()
-
-const val defaultClassNameSuffix = "Native"
-const val defaultInterfaceNameSuffix = "NativeProtocol"
-
-fun KotlinCompilation.Result.generatedFiles(
-    processorType: ProcessorType,
-    tempDir: File
-) = when (processorType) {
-    ProcessorType.KAPT -> this.generatedFiles
-    ProcessorType.KSP -> kspGeneratedSources(tempDir)
 }
 
 private fun kspGeneratedSources(tempDir: File): List<File> {

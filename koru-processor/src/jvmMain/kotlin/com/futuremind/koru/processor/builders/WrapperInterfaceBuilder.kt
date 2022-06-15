@@ -1,5 +1,6 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.builders
 
+import com.futuremind.koru.processor.GeneratedInterfaceSpec
 import com.squareup.kotlinpoet.*
 
 

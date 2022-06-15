@@ -1,4 +1,4 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.builders
 
 import com.squareup.kotlinpoet.*
 import com.futuremind.koru.SuspendWrapper
