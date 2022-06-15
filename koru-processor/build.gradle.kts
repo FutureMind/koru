@@ -41,10 +41,13 @@ kotlin {
 
         val jvmTest by getting {
             dependencies {
-                implementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-                implementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.8")
-                implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.8")
+                val junitVersion = "5.8.2"
+                val compileTestingVersion = "1.4.9"
+                implementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+                implementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing:$compileTestingVersion")
+                implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:$compileTestingVersion")
                 implementation("io.kotest:kotest-assertions-core:4.6.3")
             }
         }

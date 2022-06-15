@@ -4,6 +4,8 @@ import com.futuremind.koru.processor.utils.*
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 
 
@@ -12,7 +14,8 @@ class FunctionReturnTypeConversionTest {
     @TempDir
     lateinit var tempDir: File
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate wrappers for suspend functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
@@ -43,7 +46,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate wrappers for blocking functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
@@ -74,7 +78,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>"
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate wrappers for Flow returning functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
@@ -106,7 +111,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("returnSthComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate wrappers for SharedFlow, StateFlow etc returning functions`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(
@@ -142,7 +148,8 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("mutableSharedFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate wrappers for properties`(processorType: ProcessorType) {
 
         val generatedClass = compileAndReturnGeneratedClass(

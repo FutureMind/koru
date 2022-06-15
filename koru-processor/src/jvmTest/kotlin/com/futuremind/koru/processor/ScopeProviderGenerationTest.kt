@@ -6,6 +6,8 @@ import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 
 class ScopeProviderGenerationTest {
@@ -13,7 +15,8 @@ class ScopeProviderGenerationTest {
     @TempDir
     lateinit var tempDir: File
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should throw if @ExportedScopeProvider is applied to class which doesn't extend ScopeProvider`(processorType: ProcessorType) =
         testThrowsCompilationError(
             source = SourceFile.kotlin(
@@ -36,7 +39,8 @@ class ScopeProviderGenerationTest {
             processorType = processorType
         )
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should generate top level property with scope provider`(processorType: ProcessorType) {
 
         val source = SourceFile.kotlin(
@@ -70,7 +74,8 @@ class ScopeProviderGenerationTest {
 
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should use generated scope provider via @ToNativeClass(launchOnScope)`(processorType: ProcessorType) {
 
         val scopeProvider = SourceFile.kotlin(
@@ -125,7 +130,8 @@ class ScopeProviderGenerationTest {
 
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should import generated scope provider when different package`(processorType: ProcessorType) {
 
         val scopeProvider = SourceFile.kotlin(
@@ -181,7 +187,8 @@ class ScopeProviderGenerationTest {
         generatedClass shouldContain "SuspendWrapper(scopeProvider, "
     }
 
-    @ProcessorTest
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
     fun `should throw if trying to use @ToNativeClass(launchOnScope) without exporting scope via @ExportedScopeProvider`(processorType: ProcessorType) {
 
         testThrowsCompilationError(
