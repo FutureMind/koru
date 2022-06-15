@@ -1,7 +1,7 @@
 rootProject.name = "Koru"
 gradle.rootProject {
     group = "com.futuremind"
-    version = "0.10.0"
+    version = "0.11.0"
 }
 
 
