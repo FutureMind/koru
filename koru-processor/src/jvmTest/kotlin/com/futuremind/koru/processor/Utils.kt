@@ -24,21 +24,27 @@ fun testThrowsCompilationError(
     compilationResult.messages shouldContain expectedMessage
 }
 
-fun compileAndReturnGeneratedClass(
-    source: SourceFile,
-    generatedClassCanonicalName: String,
+fun compile(
+    sources: List<SourceFile>,
     tempDir: File,
     processorType: ProcessorType
+) = when (processorType) {
+    ProcessorType.KAPT -> prepareCompilation(sources, tempDir, processorType).compile()
+    ProcessorType.KSP -> KSPRuntimeCompiler.compile(
+        tempDir, prepareCompilation(sources, tempDir, processorType)
+    )
+}.apply {
+    exitCode shouldBe KotlinCompilation.ExitCode.OK
+}
+
+fun compileAndReturnGeneratedClass(
+    source: SourceFile,
+    tempDir: File,
+    processorType: ProcessorType,
+    generatedClassCanonicalName: String
 ): KClass<out Any> {
-    val compilationResult = when (processorType) {
-        ProcessorType.KAPT -> prepareCompilation(source, tempDir, processorType).compile()
-        ProcessorType.KSP -> KSPRuntimeCompiler.compile(
-            tempDir, prepareCompilation(source, tempDir, processorType)
-        )
-    }
-//    debugPrintGenerated(compilationResult)
+    val compilationResult = compile(listOf(source), tempDir, processorType)
     val generatedClass = compilationResult.classLoader.loadClass(generatedClassCanonicalName)
-    compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
     return generatedClass.kotlin
 }
 
@@ -47,7 +53,7 @@ fun compileAndReturnGeneratedClass(
  * Double compilation hack taken from
  * https://github.com/tschuchortdev/kotlin-compile-testing/issues/72
  */
-object KSPRuntimeCompiler {
+private object KSPRuntimeCompiler {
 
     fun compile(tempDir: File, compilation: KotlinCompilation): KotlinCompilation.Result {
         val pass1 = compilation.compile()
@@ -72,21 +78,7 @@ object KSPRuntimeCompiler {
             .toList()
 }
 
-fun debugPrintGenerated(compilationResult: KotlinCompilation.Result) {
-    compilationResult.generatedFiles.forEach {
-        println("\n\n" + it.absolutePath + "\n")
-        println(it.readText().trim())
-    }
-}
-
-
-fun prepareCompilation(
-    sourceFile: SourceFile,
-    tempDir: File,
-    processorType: ProcessorType
-) = prepareCompilation(listOf(sourceFile), tempDir, processorType)
-
-fun prepareCompilation(
+private fun prepareCompilation(
     sourceFiles: List<SourceFile>,
     tempDir: File,
     processorType: ProcessorType

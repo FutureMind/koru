@@ -10,8 +10,6 @@ import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.*
 import java.util.*
-import javax.annotation.processing.SupportedSourceVersion
-import javax.lang.model.SourceVersion
 import kotlin.reflect.KClass
 
 
@@ -21,7 +19,6 @@ class KoruProcessorProvider : SymbolProcessorProvider {
 }
 
 @OptIn(KotlinPoetKspPreview::class, KspExperimental::class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8) //TODO?
 class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

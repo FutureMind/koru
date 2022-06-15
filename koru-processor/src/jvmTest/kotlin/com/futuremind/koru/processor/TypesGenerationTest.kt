@@ -160,10 +160,11 @@ class TypesGenerationTest {
     @ProcessorTest
     fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFile = SourceFile.kotlin(
-                "interface2.kt",
-                """
+        val compilationResult = compile(
+            sources = listOf(
+                SourceFile.kotlin(
+                    "interface2.kt",
+                    """
                             package com.futuremind.kmm101.test
                             
                             import com.futuremind.koru.ToNativeClass
@@ -180,10 +181,11 @@ class TypesGenerationTest {
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
+                )
             ),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
+        )
 
         val generatedInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
@@ -211,8 +213,8 @@ class TypesGenerationTest {
     @ProcessorTest
     fun `should match generated class with generated interface if they matched in original code`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(
+        val compilationResult = compile(
+            sources = listOf(
                 SourceFile.kotlin(
                     "interface3.kt",
                     """
@@ -254,7 +256,7 @@ class TypesGenerationTest {
             ),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
+        )
 
         val generatedInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.IExample$defaultInterfaceNameSuffix").kotlin
@@ -927,10 +929,11 @@ class TypesGenerationTest {
     @ProcessorTest
     fun `should keep internal visibility when generating class or add public when omitted`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFile = SourceFile.kotlin(
-                "visbility.kt",
-                """
+        val compilationResult = compile(
+            sources = listOf(
+                SourceFile.kotlin(
+                    "visbility.kt",
+                    """
                             package com.futuremind.kmm101.test
                             
                             import com.futuremind.koru.ToNativeClass
@@ -948,10 +951,11 @@ class TypesGenerationTest {
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                             }
                         """
+                )
             ),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
+        )
 
         val internalInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.InternalExample$defaultInterfaceNameSuffix").kotlin
@@ -1030,13 +1034,11 @@ class TypesGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(classToWrap),
+        val compilationResult = compile(
+            sources = listOf(classToWrap),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
-
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        )
 
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
@@ -1065,13 +1067,11 @@ class TypesGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(classToWrap),
+        val compilationResult = compile(
+            sources = listOf(classToWrap),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
-
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        )
 
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")

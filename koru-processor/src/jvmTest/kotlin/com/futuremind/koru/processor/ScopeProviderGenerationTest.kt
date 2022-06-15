@@ -54,7 +54,7 @@ class ScopeProviderGenerationTest {
             """
         )
 
-        val compilationResult = prepareCompilation(source, tempDir, processorType).compile()
+        val compilationResult = compile(listOf(source), tempDir, processorType)
 
         val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
@@ -105,13 +105,11 @@ class ScopeProviderGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(scopeProvider, classToWrap),
+        val compilationResult = compile(
+            sources = listOf(scopeProvider, classToWrap),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
-
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        )
 
         val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
@@ -163,13 +161,11 @@ class ScopeProviderGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(scopeProvider, classToWrap),
+        val compilationResult = compile(
+            sources = listOf(scopeProvider, classToWrap),
             tempDir = tempDir,
             processorType = processorType
-        ).compile()
-
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        )
 
         val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
