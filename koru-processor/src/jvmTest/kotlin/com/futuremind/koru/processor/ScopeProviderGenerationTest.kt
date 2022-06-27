@@ -183,7 +183,8 @@ class ScopeProviderGenerationTest {
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
         generatedClass shouldContain "import com.futuremind.kmm101.test.scope.exportedScopeProvider_mainScopeProvider"
         generatedClass shouldContain "this(wrapped,exportedScopeProvider_mainScopeProvider)"
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, "
+        generatedClass shouldContain "FlowWrapper<Float> ="
+        generatedClass shouldContain "FlowWrapper(scopeProvider, "
         generatedClass shouldContain "SuspendWrapper(scopeProvider, "
     }
 

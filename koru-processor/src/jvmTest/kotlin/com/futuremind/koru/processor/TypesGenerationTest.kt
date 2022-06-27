@@ -1071,7 +1071,8 @@ class TypesGenerationTest {
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
 
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, true"
+        generatedClass shouldContain "FlowWrapper<Float>"
+        generatedClass shouldContain "FlowWrapper(scopeProvider, true"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, true"
         generatedClass shouldContain "this.freeze()"
     }
@@ -1105,7 +1106,8 @@ class TypesGenerationTest {
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
 
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, false"
+        generatedClass shouldContain "FlowWrapper<Float> ="
+        generatedClass shouldContain "FlowWrapper(scopeProvider, false"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, false"
         generatedClass shouldNotContain "this.freeze()"
     }

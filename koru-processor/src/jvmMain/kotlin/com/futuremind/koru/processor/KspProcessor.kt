@@ -132,7 +132,7 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
         val annotation = classDeclaration.getAnnotationsByType(ToNativeClass::class).first()
         val launchOnScopeTypeName = classDeclaration.getKsAnnotationByType(ToNativeClass::class)
             .arguments.first { it.name?.getShortName() == "launchOnScope" }
-            .let { (it.value as KSType).toTypeName() }
+            .let { (it.value as? KSType)?.toTypeName() }
         val originalTypeName = classDeclaration.toClassName()
         val newTypeName = className(annotation, originalTypeName.simpleName)
         val scopeProviderMemberName = findMatchingScopeProvider(
