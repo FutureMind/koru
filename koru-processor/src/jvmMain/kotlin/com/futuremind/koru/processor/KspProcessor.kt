@@ -11,7 +11,9 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
@@ -128,18 +130,22 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
     ): GeneratedClassSpec {
         val originalTypeSpec = classDeclaration.toTypeSpec()
         val annotation = classDeclaration.getAnnotationsByType(ToNativeClass::class).first()
+        val launchOnScopeTypeName = classDeclaration.getKsAnnotationByType(ToNativeClass::class)
+            .arguments.first { it.name?.getShortName() == "launchOnScope" }
+            .let { (it.value as KSType).toTypeName() }
         val originalTypeName = classDeclaration.toClassName()
         val newTypeName = className(annotation, originalTypeName.simpleName)
+        val scopeProviderMemberName = findMatchingScopeProvider(
+            launchOnScopeTypeName,
+            scopeProviders
+        )
 
         val generatedType = WrapperClassBuilder(
             originalTypeName = originalTypeName,
             originalTypeSpec = originalTypeSpec,
             newTypeName = newTypeName,
             generatedInterfaces = generatedInterfaces,
-            scopeProviderMemberName = findMatchingScopeProvider(
-                annotation.launchOnScopeTypeName(),
-                scopeProviders
-            ),
+            scopeProviderMemberName = scopeProviderMemberName,
             freezeWrapper = annotation.freeze
         ).build()
 
@@ -148,6 +154,13 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             newTypeName = ClassName(originalTypeName.packageName, newTypeName),
             newSpec = generatedType
         )
+    }
+
+    private fun <T : Annotation> KSAnnotated.getKsAnnotationByType(annotationKClass: KClass<T>): KSAnnotation {
+        return this.annotations.filter {
+            it.shortName.getShortName() == annotationKClass.simpleName && it.annotationType.resolve().declaration
+                .qualifiedName?.asString() == annotationKClass.qualifiedName
+        }.first()
     }
 
     private fun CodeGenerator.writeFile(

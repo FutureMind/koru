@@ -3,7 +3,7 @@ plugins {
         this could be a pure-jvm module, but there are some dependency issues
         https://stackoverflow.com/questions/65830632/cant-access-commonmain-multiplatform-classes-from-a-jvm-only-module
      */
-    kotlin("multiplatform") version "1.6.10"
+    kotlin("multiplatform") version "1.6.21"
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")
@@ -34,8 +34,10 @@ kotlin {
                 implementation("com.squareup:kotlinpoet-ksp:$kotlinpoetVersion")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+                implementation("com.google.devtools.ksp:symbol-processing-api:1.6.21-1.0.5")
 
-                implementation("com.google.devtools.ksp:symbol-processing-api:1.6.10-1.0.2")
+                kotlin.srcDir("src/main/kotlin")
+                resources.srcDir("src/main/resources")
             }
         }
 

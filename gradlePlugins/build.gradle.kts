@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
     id("maven-publish")
     id("signing")
-    id("org.jetbrains.dokka") version "1.6.10"
+    id("org.jetbrains.dokka") version "1.6.21"
 }
 
 repositories {
@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.6.10")
+    implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.6.21")
 }
 
 gradlePlugin {

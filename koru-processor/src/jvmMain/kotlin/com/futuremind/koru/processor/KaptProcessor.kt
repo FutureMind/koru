@@ -185,7 +185,7 @@ class KaptProcessor : AbstractProcessor() {
             newTypeName = newTypeName,
             generatedInterfaces = generatedInterfaces,
             scopeProviderMemberName = findMatchingScopeProvider(
-                annotation.launchOnScopeTypeName(),
+                annotation.kaptLaunchOnScopeTypeName(),
                 scopeProviders
             ),
             freezeWrapper = annotation.freeze

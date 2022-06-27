@@ -99,7 +99,6 @@ private object KSPRuntimeCompiler {
         }
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
-            verbose = false
             inheritClassPath = true
         }.compile()
         require(pass2.exitCode == KotlinCompilation.ExitCode.OK) {
