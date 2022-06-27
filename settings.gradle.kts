@@ -7,6 +7,7 @@ gradle.rootProject {
 
 includeBuild("gradlePlugins")
 include(":koru")
+include(":koru-compiler-plugin")
 include(":koru-processor")
 
 pluginManagement {
