@@ -4,11 +4,10 @@ gradle.rootProject {
     version = "0.11.0"
 }
 
-
-includeBuild("gradlePlugins")
-include(":koru")
-include(":koru-compiler-plugin")
-include(":koru-processor")
+includeBuild("publish-plugin")
+include("koru")
+include("koru-compiler-plugin")
+include("koru-processor")
 
 pluginManagement {
     repositories {
@@ -21,6 +20,11 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("libs.versions.toml"))
+        }
+    }
     repositories {
         mavenCentral()
     }
