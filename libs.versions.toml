@@ -1,8 +1,8 @@
 [versions]
 kotlin = "1.6.21"
+ksp = "1.6.21-1.0.6"
 
 [libraries]
 coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "kotlin" }
-ksp = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.6.21-1.0.6"
-
+kspPlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+ksp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }

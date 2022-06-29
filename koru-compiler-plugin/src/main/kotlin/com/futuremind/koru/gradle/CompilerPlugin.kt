@@ -43,7 +43,8 @@ class CompilerPlugin : Plugin<Project> {
                     || it.name.contains("tvos")
         }
         .configureEach {
-            kotlin.srcDir("${project.buildDir.absolutePath}/generated/ksp/metadata/commonMain/kotlin")
+            //TODO
+//            kotlin.srcDir("${project.buildDir.absolutePath}/generated/ksp/metadata/commonMain/kotlin")
         }
 }
 
