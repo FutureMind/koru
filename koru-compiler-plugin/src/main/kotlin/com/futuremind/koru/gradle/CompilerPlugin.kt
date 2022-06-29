@@ -2,6 +2,7 @@ package com.futuremind.koru.gradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -10,10 +11,16 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 class CompilerPlugin : Plugin<Project> {
 
     override fun apply(project: Project) = with(project) {
+        val extension: KoruPluginExtension = extensions.create("koru")
         addKspPluginDependency()
         enableKspRunForCommonMainSourceSet()
         makeSureCompilationIsRunAfterKsp()
-        addGeneratedFilesToAppleSourceSets()
+        afterEvaluate {
+            require(extension.nativeSourceSetNames.isNotEmpty()) {
+                "You need to provide the name of your main native source set in your build.gradle, e.g. koru.nativeSourceSetNames = listOf(\"iosMain\")"
+            }
+            addGeneratedFilesToSourceSets(extension.nativeSourceSetNames)
+        }
     }
 
     private fun Project.addKspPluginDependency() = pluginManager.apply("com.google.devtools.ksp")
@@ -34,18 +41,18 @@ class CompilerPlugin : Plugin<Project> {
             dependsOn("kspCommonMainKotlinMetadata")
         }
 
-    private fun Project.addGeneratedFilesToAppleSourceSets() = extensions
+    private fun Project.addGeneratedFilesToSourceSets(sourceSetNames: List<String>) = extensions
         .getByType<KotlinMultiplatformExtension>().sourceSets
         .matching {
-            it.name.contains("ios")
-                    || it.name.contains("macos")
-                    || it.name.contains("watchos")
-                    || it.name.contains("tvos")
+            sourceSetNames.contains(it.name)
         }
         .configureEach {
-            //TODO
-//            kotlin.srcDir("${project.buildDir.absolutePath}/generated/ksp/metadata/commonMain/kotlin")
+            kotlin.srcDir("${project.buildDir.absolutePath}/generated/ksp/metadata/commonMain/kotlin")
         }
+}
+
+open class KoruPluginExtension {
+    var nativeSourceSetNames: List<String> = listOf()
 }
 
 
