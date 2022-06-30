@@ -1,9 +1,6 @@
 package com.futuremind.koru.processor
 
-import com.futuremind.koru.ExportedScopeProvider
-import com.futuremind.koru.ScopeProvider
-import com.futuremind.koru.ToNativeClass
-import com.futuremind.koru.ToNativeInterface
+import com.futuremind.koru.*
 import com.futuremind.koru.processor.builders.ScopeProviderBuilder
 import com.futuremind.koru.processor.builders.WrapperClassBuilder
 import com.futuremind.koru.processor.builders.WrapperInterfaceBuilder
@@ -21,6 +18,7 @@ import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.MirroredTypeException
 import javax.tools.Diagnostic.Kind.ERROR
 
 
@@ -212,6 +210,19 @@ class KaptProcessor : AbstractProcessor() {
         if (!superinterfaces.contains(ScopeProvider::class.asTypeName())) {
             wrongScopeProviderSupertype()
         }
+    }
+
+    private fun ToNativeClass.kaptLaunchOnScopeTypeName(): TypeName? {
+        //this is the dirtiest hack ever but it works :O
+        //https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
+        var scopeProviderTypeName: TypeName? = null
+        try {
+            this.launchOnScope
+        } catch (e: MirroredTypeException) {
+            scopeProviderTypeName = e.typeMirror.asTypeName()
+        }
+        if (scopeProviderTypeName == NoScopeProvider::class.asTypeName()) return null
+        return scopeProviderTypeName
     }
 
 }

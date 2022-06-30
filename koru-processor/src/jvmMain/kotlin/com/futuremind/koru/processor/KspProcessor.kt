@@ -16,7 +16,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
@@ -29,7 +28,7 @@ class KoruProcessorProvider : SymbolProcessorProvider {
         KspProcessor(environment.codeGenerator)
 }
 
-@OptIn(KotlinPoetKspPreview::class, KspExperimental::class)
+@OptIn(KspExperimental::class)
 class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -79,7 +78,6 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
 
     }
 
-    @OptIn(KotlinPoetKspPreview::class)
     private fun generateScopeProvider(classDeclaration: KSClassDeclaration): GeneratedPropertySpec {
         val scopeProviderClassName = classDeclaration.toClassName()
         val scopePropertyName = "exportedScopeProvider_" +

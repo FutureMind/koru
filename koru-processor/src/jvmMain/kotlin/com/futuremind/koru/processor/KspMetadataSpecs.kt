@@ -1,5 +1,3 @@
-@file:OptIn(KotlinPoetKspPreview::class)
-
 package com.futuremind.koru.processor
 
 import com.google.devtools.ksp.getDeclaredFunctions
@@ -14,7 +12,6 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName

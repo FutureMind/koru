@@ -126,8 +126,7 @@ class WrapperClassBuilder(
         originalFunSpec: FunSpec
     ): FunSpec.Builder = addCode(
         buildCodeBlock {
-//            add("return %T(", SuspendWrapper::class) https://github.com/square/kotlinpoet/issues/1273
-            add("return ${SuspendWrapper::class.asTypeName().canonicalName}(")
+            add("return %T(", SuspendWrapper::class)
             add(SCOPE_PROVIDER_PROPERTY_NAME)
             add(", ")
             add("%L", freezeWrapper)
@@ -144,8 +143,7 @@ class WrapperClassBuilder(
     )
 
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
-//        add("return %T(", FlowWrapper::class) https://github.com/square/kotlinpoet/issues/1273
-        add("return ${FlowWrapper::class.asTypeName().canonicalName}(")
+        add("return %T(", FlowWrapper::class)
         add(SCOPE_PROVIDER_PROPERTY_NAME)
         add(", %L", freezeWrapper)
         add(", ${callOriginal})")

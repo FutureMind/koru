@@ -2,7 +2,6 @@ package com.futuremind.koru.processor
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
@@ -22,7 +21,6 @@ internal fun Collection<Element>.sortByInheritance(
     { (it as TypeElement).toTypeSpec(classInspector).superinterfaces.keys }
 )
 
-@OptIn(KotlinPoetKspPreview::class)
 fun Collection<KSClassDeclaration>.sortByInheritance() = sortByInheritance(
     { it.toClassName() },
     { it.getAllSuperTypes().map { it.toClassName() }.toList() }

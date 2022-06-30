@@ -29,7 +29,7 @@ kotlin {
                 implementation(project(":koru"))
 
                 //code generation
-                val kotlinpoetVersion = "1.11.0"
+                val kotlinpoetVersion = "1.12.0"
                 implementation("com.squareup:kotlinpoet:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-metadata:$kotlinpoetVersion")
                 implementation("com.squareup:kotlinpoet-ksp:$kotlinpoetVersion")
