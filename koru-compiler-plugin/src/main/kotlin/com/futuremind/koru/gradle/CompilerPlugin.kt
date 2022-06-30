@@ -12,18 +12,20 @@ class CompilerPlugin : Plugin<Project> {
 
     override fun apply(project: Project) = with(project) {
         val extension: KoruPluginExtension = extensions.create("koru")
-        addKspPluginDependency()
+        requireKspPluginDependency()
         enableKspRunForCommonMainSourceSet()
         makeSureCompilationIsRunAfterKsp()
         afterEvaluate {
-            require(extension.nativeSourceSetNames.isNotEmpty()) {
-                "You need to provide the name of your main native source set in your build.gradle, e.g. koru.nativeSourceSetNames = listOf(\"iosMain\")"
-            }
+            requireSourceSetsNamesSet(extension.nativeSourceSetNames)
             addGeneratedFilesToSourceSets(extension.nativeSourceSetNames)
         }
     }
 
-    private fun Project.addKspPluginDependency() = pluginManager.apply("com.google.devtools.ksp")
+    private fun Project.requireKspPluginDependency(){
+        requireNotNull(pluginManager.findPlugin("com.google.devtools.ksp")) {
+            "You need to provide ksp plugin, e.g. plugins { id(\"com.google.devtools.ksp\") version \"1.7.0-1.0.6\" }"
+        }
+    }
 
     private fun Project.enableKspRunForCommonMainSourceSet() = dependencies {
         //todo don't hardcode version
@@ -40,6 +42,12 @@ class CompilerPlugin : Plugin<Project> {
         .configureEach {
             dependsOn("kspCommonMainKotlinMetadata")
         }
+
+    private fun requireSourceSetsNamesSet(nativeSourceSetNames: List<String>) {
+        require(nativeSourceSetNames.isNotEmpty()) {
+            "You need to provide the name of your main native source set in your build.gradle, e.g. koru.nativeSourceSetNames = listOf(\"iosMain\")"
+        }
+    }
 
     private fun Project.addGeneratedFilesToSourceSets(sourceSetNames: List<String>) = extensions
         .getByType<KotlinMultiplatformExtension>().sourceSets
