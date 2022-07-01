@@ -187,4 +187,40 @@ class FunctionReturnTypeConversionTest {
         generatedClass.memberReturnType("someValFlowComplex") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.collections.List<kotlin.collections.Map<kotlin.Int, com.futuremind.kmm101.test.Whatever>>>"
     }
 
+    //fails https://github.com/square/kotlinpoet/issues/1304
+//    @ParameterizedTest
+//    @EnumSource(ProcessorType::class)
+    fun `should properly handle typealias`(processorType: ProcessorType) {
+
+        val generatedClass = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "suspend1.kt",
+                """
+                            package com.futuremind.kmm101.test
+                            
+                            import com.futuremind.koru.ToNativeClass
+                            import kotlinx.coroutines.flow.Flow
+
+                            typealias LeAlias = Map<Int, String>
+
+                            @ToNativeClass
+                            class SuspendExample {
+                                suspend fun paramTypeAlias(whatever: LeAlias) : Float = TODO()
+                                suspend fun returnTypeAlias(whatever: Int) : LeAlias = TODO()
+                                fun complexParamTypeAlias(whatever: List<LeAlias>) : Flow<Float> = TODO()
+                                fun returnComplexTypeAlias(whatever: Int) : Flow<LeAlias> = TODO()
+                            }
+                        """
+            ),
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.SuspendExample$defaultClassNameSuffix",
+            tempDir = tempDir,
+            processorType = processorType
+        )
+
+        generatedClass.memberReturnType("paramTypeAlias") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("returnTypeAlias") shouldBe "com.futuremind.koru.SuspendWrapper<com.futuremind.kmm101.test.LeAlias /* = kotlin.collections.Map<kotlin.Int, kotlin.String> */>"
+        generatedClass.memberReturnType("complexParamTypeAlias") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedClass.memberReturnType("returnComplexTypeAlias") shouldBe "com.futuremind.koru.FlowWrapper<com.futuremind.kmm101.test.LeAlias /* = kotlin.collections.Map<kotlin.Int, kotlin.String> */>"
+    }
+
 }

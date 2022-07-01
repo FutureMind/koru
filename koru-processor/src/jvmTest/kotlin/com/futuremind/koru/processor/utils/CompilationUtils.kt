@@ -97,6 +97,7 @@ private object KSPRuntimeCompiler {
         require(pass1.exitCode == KotlinCompilation.ExitCode.OK) {
             "Cannot do the 1st pass \n ${pass1.messages}"
         }
+        debugPrintGenerated(kspGeneratedSources(tempDir))
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
             inheritClassPath = true
@@ -121,4 +122,11 @@ private fun kspGeneratedSources(tempDir: File): List<File> {
     val javaGeneratedDir = kspGeneratedDir.resolve("java")
     return kotlinGeneratedDir.walkTopDown().toList() +
             javaGeneratedDir.walkTopDown()
+}
+
+private fun debugPrintGenerated(files: Collection<File>) = files
+    .filter { it.isFile }
+    .forEach {
+    println("\n\n"+it.absolutePath+"\n")
+    println(it.readText().trim())
 }
