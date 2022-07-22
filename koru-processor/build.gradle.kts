@@ -12,7 +12,7 @@ plugins {
 
 kotlin {
 
-    //this is only used as kapt (annotation processor, so pure jvm)
+    //this is only used as kapt / ksp (annotation processor, so pure jvm)
     jvm {
         val main by compilations.getting {
             kotlinOptions {

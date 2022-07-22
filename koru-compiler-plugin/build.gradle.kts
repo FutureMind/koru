@@ -1,12 +1,9 @@
 plugins {
     `kotlin-dsl`
     id("maven-publish")
+    id("com.gradle.plugin-publish") version "1.0.0"
     id("com.futuremind.koru.publish")
 }
-
-//TODO
-group = "com.futuremind"
-version = "0.11.0"
 
 repositories {
     mavenCentral()
@@ -20,9 +17,17 @@ gradlePlugin {
     plugins {
         create("compilerPlugin") {
             id = "com.futuremind.koru"
+            displayName = "Koru - Gradle Plugin"
+            description = "Wrappers for suspend functions / Flow in Kotlin Native - gradle plugin"
             implementationClass = "com.futuremind.koru.gradle.CompilerPlugin"
         }
     }
+}
+
+pluginBundle {
+    website = "https://github.com/FutureMind/koru"
+    vcsUrl = "https://github.com/FutureMind/koru"
+    tags = listOf("coroutines", "kmm", "kmp", "kotlin", "multiplatform", "native", "swift", "suspend", "flow", "kotlin-multiplatform", "kotlin-native")
 }
 
 koruPublishing {
