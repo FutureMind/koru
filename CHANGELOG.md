@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.11.1] - 2022.07-29
+## [0.11.1] - 2022-07-29
 ### Added
 - Rewritten for KSP (KAPT still available).
 - Gradle plugin for easier setup.
