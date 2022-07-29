@@ -1,13 +1,14 @@
 rootProject.name = "Koru"
-gradle.rootProject {
+
+gradle.allprojects {
     group = "com.futuremind"
-    version = "0.10.0"
+    version = "0.11.1"
 }
 
-
-includeBuild("gradlePlugins")
-include(":koru")
-include(":koru-processor")
+includeBuild("publish-plugin")
+include("koru")
+include("koru-compiler-plugin")
+include("koru-processor")
 
 pluginManagement {
     repositories {
@@ -20,6 +21,11 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("libs.versions.toml"))
+        }
+    }
     repositories {
         mavenCentral()
     }

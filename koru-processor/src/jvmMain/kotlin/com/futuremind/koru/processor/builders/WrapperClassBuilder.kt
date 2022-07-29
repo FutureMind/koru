@@ -1,15 +1,16 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.builders
 
 import com.futuremind.koru.FlowWrapper
 import com.futuremind.koru.ScopeProvider
 import com.futuremind.koru.SuspendWrapper
+import com.futuremind.koru.processor.GeneratedInterfaceSpec
 import com.squareup.kotlinpoet.*
 
 
 class WrapperClassBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
-    generatedInterfaces: Map<TypeName, GeneratedInterface>,
+    generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
     private val newTypeName: String,
     private val scopeProviderMemberName: MemberName?,
     private val freezeWrapper: Boolean

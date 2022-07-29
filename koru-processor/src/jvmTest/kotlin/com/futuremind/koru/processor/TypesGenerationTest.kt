@@ -1,13 +1,18 @@
 package com.futuremind.koru.processor
 
+import com.futuremind.koru.processor.utils.*
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 import kotlin.reflect.KVisibility
 
@@ -16,8 +21,9 @@ class TypesGenerationTest {
     @TempDir
     lateinit var tempDir: File
 
-    @Test
-    fun `should generate interface from interface via @ToNativeInterface`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate interface from interface via @ToNativeInterface`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -39,7 +45,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.InterfaceGenerationExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe true
@@ -51,8 +58,9 @@ class TypesGenerationTest {
     }
 
 
-    @Test
-    fun `should generate interface from class via @ToNativeInterface`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate interface from class via @ToNativeInterface`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -74,7 +82,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.InterfaceGenerationExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe true
@@ -85,8 +94,9 @@ class TypesGenerationTest {
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should generate class from interface via @ToNativeClass`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate class from interface via @ToNativeClass`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -108,7 +118,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.ClassGenerationExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe false
@@ -119,8 +130,9 @@ class TypesGenerationTest {
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should generate class from class via @ToNativeClass`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate class from class via @ToNativeClass`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -142,7 +154,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.ClassGenerationExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.java.isInterface shouldBe false
@@ -153,13 +166,15 @@ class TypesGenerationTest {
         generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFile = SourceFile.kotlin(
-                "interface2.kt",
-                """
+        val compilationResult = compile(
+            sources = listOf(
+                SourceFile.kotlin(
+                    "interface2.kt",
+                    """
                             package com.futuremind.kmm101.test
                             
                             import com.futuremind.koru.ToNativeClass
@@ -176,9 +191,11 @@ class TypesGenerationTest {
                                 fun flow(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
+                )
             ),
-            tempDir = tempDir
-        ).compile()
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
         val generatedInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.Example$defaultInterfaceNameSuffix").kotlin
@@ -203,11 +220,12 @@ class TypesGenerationTest {
         generatedClass.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
     }
 
-    @Test
-    fun `should match generated class with generated interface if they matched in original code`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should match generated class with generated interface if they matched in original code`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(
+        val compilationResult = compile(
+            sources = listOf(
                 SourceFile.kotlin(
                     "interface3.kt",
                     """
@@ -247,8 +265,9 @@ class TypesGenerationTest {
                         """
                 )
             ),
-            tempDir = tempDir
-        ).compile()
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
         val generatedInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.IExample$defaultInterfaceNameSuffix").kotlin
@@ -262,8 +281,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate interface with custom name via @ToNativeInterface(name)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate interface with custom name via @ToNativeInterface(name)`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -283,12 +303,14 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.CustomIosProtocol",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
     }
 
-    @Test
-    fun `should generate class with custom name via @ToNativeClass(name)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate class with custom name via @ToNativeClass(name)`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -308,12 +330,14 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.CustomIos",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
     }
 
-    @Test
-    fun `should not wrap private members when generating class`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not wrap private members when generating class`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -340,14 +364,16 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.PrivateFunctionsExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
         //enough to check it compiles, it would not with wrapped private function
 
     }
 
-    @Test
-    fun `should not wrap private functions when generating interface`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not wrap private functions when generating interface`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -370,14 +396,16 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.PrivateFunctionsExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
         //enough to check it compiles, it would not with wrapped private function
 
     }
 
-    @Test
-    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -424,7 +452,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.NotAnnotatedInterface$defaultInterfaceNameSuffix"
@@ -444,8 +473,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -491,7 +521,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.SuperInterfacesExample$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldNotContain "com.futuremind.kmm101.test.NotAnnotatedInterface$defaultInterfaceNameSuffix"
@@ -511,8 +542,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -549,7 +581,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -565,8 +598,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -598,7 +632,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -609,8 +644,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate complex inheritance hierarchy`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate complex inheritance hierarchy`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -663,7 +699,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -682,8 +719,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -743,7 +781,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -764,8 +803,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should generate complex inheritance hierarchy in bad order`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate complex inheritance hierarchy in bad order`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -805,7 +845,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.W$defaultInterfaceNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -814,8 +855,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -851,7 +893,8 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MultipleInterfacesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
         generatedType.supertypes.map { it.toString() } shouldContainAll listOf(
@@ -867,8 +910,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should not add override modifier from a foreign interface just because the name matches`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not add override modifier from a foreign interface just because the name matches`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -900,18 +944,21 @@ class TypesGenerationTest {
                         """
             ),
             generatedClassCanonicalName = "com.futuremind.kmm101.test.MatchingNamesExample$defaultClassNameSuffix",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
         //just checking that it compiles is enough, would not compile with override pointing to missing interface
     }
 
-    @Test
-    fun `should keep internal visibility when generating class or add public when omitted`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should keep internal visibility when generating class or add public when omitted`(processorType: ProcessorType) {
 
-        val compilationResult = prepareCompilation(
-            sourceFile = SourceFile.kotlin(
-                "visbility.kt",
-                """
+        val compilationResult = compile(
+            sources = listOf(
+                SourceFile.kotlin(
+                    "visbility.kt",
+                    """
                             package com.futuremind.kmm101.test
                             
                             import com.futuremind.koru.ToNativeClass
@@ -929,9 +976,11 @@ class TypesGenerationTest {
                                 suspend fun suspending(whatever: Int) : Float = TODO()
                             }
                         """
+                )
             ),
-            tempDir = tempDir
-        ).compile()
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
         val internalInterface =
             compilationResult.classLoader.loadClass("com.futuremind.kmm101.test.InternalExample$defaultInterfaceNameSuffix").kotlin
@@ -951,8 +1000,9 @@ class TypesGenerationTest {
 
     }
 
-    @Test
-    fun `should throw on interface generation from private type`() = testThrowsCompilationError(
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should throw on interface generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
         source = SourceFile.kotlin(
             "private.kt",
             """
@@ -967,11 +1017,13 @@ class TypesGenerationTest {
                         """
         ),
         expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir
+        tempDir = tempDir,
+        processorType = processorType
     )
 
-    @Test
-    fun `should throw on class generation from private type`() = testThrowsCompilationError(
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should throw on class generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
         source = SourceFile.kotlin(
             "private.kt",
             """
@@ -986,11 +1038,13 @@ class TypesGenerationTest {
                         """
         ),
         expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir
+        tempDir = tempDir,
+        processorType = processorType
     )
 
-    @Test
-    fun `should freeze wrapper if freeze=true in annotation`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should freeze wrapper if freeze=true in annotation`(processorType: ProcessorType) {
 
         val classToWrap = SourceFile.kotlin(
             "freeze1.kt",
@@ -1008,23 +1062,24 @@ class TypesGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(classToWrap),
-            tempDir = tempDir
-        ).compile()
+        val compilationResult = compile(
+            sources = listOf(classToWrap),
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
 
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, true"
+        generatedClass shouldContain "FlowWrapper<Float>"
+        generatedClass shouldContain "FlowWrapper(scopeProvider, true"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, true"
         generatedClass shouldContain "this.freeze()"
     }
 
-    @Test
-    fun `should not freeze wrapper by default`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should not freeze wrapper by default`(processorType: ProcessorType) {
 
         val classToWrap = SourceFile.kotlin(
             "freeze2.kt",
@@ -1042,17 +1097,17 @@ class TypesGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(classToWrap),
-            tempDir = tempDir
-        ).compile()
+        val compilationResult = compile(
+            sources = listOf(classToWrap),
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
 
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, false"
+        generatedClass shouldContain "FlowWrapper<Float> ="
+        generatedClass shouldContain "FlowWrapper(scopeProvider, false"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, false"
         generatedClass shouldNotContain "this.freeze()"
     }

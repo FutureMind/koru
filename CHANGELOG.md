@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.11.1] - 2022.07-29
+### Added
+- Rewritten for KSP (KAPT still available).
+- Gradle plugin for easier setup.
+- Support for kotlin 1.6.21 - 1.7.10.
+
 ## [0.10.0] - 2021-11-12
 ### Added
 - Support for generating complex inheritance hierarchies (see [#39](https://github.com/FutureMind/koru/issues/39) for details)

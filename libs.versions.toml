@@ -1,0 +1,9 @@
+[versions]
+kotlin = "1.6.21"
+ksp = "1.6.21-1.0.6"
+# 1.7.0 will cause compatibility issues with 1.6.21 projects https://youtrack.jetbrains.com/issue/KT-47771
+
+[libraries]
+coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
+kspPlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+ksp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }

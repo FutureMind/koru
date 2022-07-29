@@ -1,11 +1,13 @@
 package com.futuremind.koru.processor
 
+import com.futuremind.koru.processor.utils.*
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 
 class ScopeProviderGenerationTest {
@@ -13,8 +15,9 @@ class ScopeProviderGenerationTest {
     @TempDir
     lateinit var tempDir: File
 
-    @Test
-    fun `should throw if @ExportedScopeProvider is applied to class which doesn't extend ScopeProvider`() =
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should throw if @ExportedScopeProvider is applied to class which doesn't extend ScopeProvider`(processorType: ProcessorType) =
         testThrowsCompilationError(
             source = SourceFile.kotlin(
                 "scopeProvider1.kt",
@@ -32,11 +35,13 @@ class ScopeProviderGenerationTest {
             """
             ),
             expectedMessage = "ExportedScopeProvider can only be applied to a class extending ScopeProvider interface",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
 
-    @Test
-    fun `should generate top level property with scope provider`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should generate top level property with scope provider`(processorType: ProcessorType) {
 
         val source = SourceFile.kotlin(
             "scopeProvider2.kt",
@@ -54,9 +59,9 @@ class ScopeProviderGenerationTest {
             """
         )
 
-        val compilationResult = prepareCompilation(source, tempDir).compile()
+        val compilationResult = compile(listOf(source), tempDir, processorType)
 
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
         compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -69,8 +74,9 @@ class ScopeProviderGenerationTest {
 
     }
 
-    @Test
-    fun `should use generated scope provider via @ToNativeClass(launchOnScope)`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should use generated scope provider via @ToNativeClass(launchOnScope)`(processorType: ProcessorType) {
 
         val scopeProvider = SourceFile.kotlin(
             "scopeProvider3.kt",
@@ -105,17 +111,16 @@ class ScopeProviderGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(scopeProvider, classToWrap),
-            tempDir = tempDir
-        ).compile()
+        val compilationResult = compile(
+            sources = listOf(scopeProvider, classToWrap),
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
 
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
@@ -125,8 +130,9 @@ class ScopeProviderGenerationTest {
 
     }
 
-    @Test
-    fun `should import generated scope provider when different package`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should import generated scope provider when different package`(processorType: ProcessorType) {
 
         val scopeProvider = SourceFile.kotlin(
             "scopeProvider3.kt",
@@ -162,28 +168,29 @@ class ScopeProviderGenerationTest {
                     """
         )
 
-        val compilationResult = prepareCompilation(
-            sourceFiles = listOf(scopeProvider, classToWrap),
-            tempDir = tempDir
-        ).compile()
+        val compilationResult = compile(
+            sources = listOf(scopeProvider, classToWrap),
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
-        compilationResult.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-        val generatedScopeProvider = compilationResult.generatedFiles
+        val generatedScopeProvider = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("MainScopeProviderContainer.kt")
 
-        val generatedClass = compilationResult.generatedFiles
+        val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("ImplicitScopeExample$defaultClassNameSuffix.kt")
 
         generatedScopeProvider shouldContain "public val exportedScopeProvider_mainScopeProvider: MainScopeProvider = MainScopeProvider()"
         generatedClass shouldContain "import com.futuremind.kmm101.test.scope.exportedScopeProvider_mainScopeProvider"
         generatedClass shouldContain "this(wrapped,exportedScopeProvider_mainScopeProvider)"
-        generatedClass shouldContain "FlowWrapper<Float> = FlowWrapper(scopeProvider, "
+        generatedClass shouldContain "FlowWrapper<Float> ="
+        generatedClass shouldContain "FlowWrapper(scopeProvider, "
         generatedClass shouldContain "SuspendWrapper(scopeProvider, "
     }
 
-    @Test
-    fun `should throw if trying to use @ToNativeClass(launchOnScope) without exporting scope via @ExportedScopeProvider`() {
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should throw if trying to use @ToNativeClass(launchOnScope) without exporting scope via @ExportedScopeProvider`(processorType: ProcessorType) {
 
         testThrowsCompilationError(
             sources = listOf(
@@ -218,9 +225,9 @@ class ScopeProviderGenerationTest {
                 )
             ),
             expectedMessage = "com.futuremind.kmm101.test.MainScopeProvider can only be used in @ToNativeClass(launchOnScope) if it has been annotated with @ExportedScopeProvider",
-            tempDir = tempDir
+            tempDir = tempDir,
+            processorType = processorType
         )
-
 
     }
 

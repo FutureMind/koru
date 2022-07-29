@@ -1,5 +1,6 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.builders
 
+import com.futuremind.koru.processor.GeneratedInterfaceSpec
 import com.squareup.kotlinpoet.*
 
 
@@ -7,7 +8,7 @@ class WrapperInterfaceBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
     private val newTypeName: String,
-    generatedInterfaces: Map<TypeName, GeneratedInterface>,
+    generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
 ) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     private val functions = originalTypeSpec.funSpecs

@@ -1,12 +1,13 @@
-package com.futuremind.koru.processor
+package com.futuremind.koru.processor.builders
 
+import com.futuremind.koru.processor.GeneratedInterfaceSpec
 import com.squareup.kotlinpoet.*
 
 
 abstract class WrapperBuilder(
     originalTypeName: ClassName,
     originalTypeSpec: TypeSpec,
-    private val generatedInterfaces: Map<TypeName, GeneratedInterface>,
+    private val generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
 ) {
 
     protected val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
@@ -18,7 +19,7 @@ abstract class WrapperBuilder(
      * 1. Add generated standalone superinterfaces if they match the original superinterfaces.
      * 2. Also add the interface generated from this class if it exists.
      */
-    private val superInterfaces: List<GeneratedInterface> = originalTypeSpec.superinterfaces.keys
+    private val superInterfaces: List<GeneratedInterfaceSpec> = originalTypeSpec.superinterfaces.keys
         .toMutableList()
         .apply { add(originalTypeName) }
         .mapNotNull { interfaceName ->
@@ -28,7 +29,7 @@ abstract class WrapperBuilder(
             }
         }
 
-    protected val superInterfacesNames = superInterfaces.map { it.name }
+    protected val superInterfacesNames = superInterfaces.map { it.newTypeName }
 
     protected fun FunSpec.Builder.setupOverrideModifier(originalFuncSpec: FunSpec) = apply {
         when (originalFuncSpec.overridesGeneratedInterface()) {
@@ -53,7 +54,7 @@ abstract class WrapperBuilder(
         fun TypeSpec.containsFunctionSignature() =
             this.funSpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
 
-        return superInterfaces.any { it.typeSpec.containsFunctionSignature() }
+        return superInterfaces.any { it.newSpec.containsFunctionSignature() }
     }
 
     private fun PropertySpec.overridesGeneratedInterface(): Boolean {
@@ -64,7 +65,7 @@ abstract class WrapperBuilder(
         fun TypeSpec.containsPropertySignature() =
             this.propertySpecs.any { it.hasSameSignature(this@overridesGeneratedInterface) }
 
-        return superInterfaces.any { it.typeSpec.containsPropertySignature() }
+        return superInterfaces.any { it.newSpec.containsPropertySignature() }
     }
 
 }

@@ -1,5 +1,6 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("multiplatform") version "1.5.31"
+    kotlin("multiplatform") version libs.versions.kotlin
     id("java-library")
     id("maven-publish")
     id("com.futuremind.koru.publish")
@@ -28,7 +29,7 @@ kotlin {
 
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
+                implementation(libs.coroutines)
             }
         }
 

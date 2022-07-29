@@ -6,7 +6,7 @@ Automatically generates wrappers for `suspend` functions and `Flow` for easy acc
 
 Inspired by https://touchlab.co/kotlin-coroutines-rxswift/ by Russell Wolf.
 
-**Note**: this library is in beta state - the API should be mostly stable but there might be minor changes.
+**Note**: version 0.11.0 introduces [KSP](https://kotlinlang.org/docs/ksp-overview.html) support. Support for kapt will still be provided for some time.
 
 ## Getting started
 
@@ -206,7 +206,7 @@ class FooIos(private val wrapped: Foo) : FooIosProtocol
 
 #### Generate class from interface
 
-*Not sure what the use case might be, nevertheless, it's also possible"
+*Not sure what the use case might be, nevertheless, it's also possible:
 
 ```kotlin
 @ToNativeClass(name = "FooIos")
@@ -238,9 +238,48 @@ Similar helper functions can be easily created for RxSwift.
 
 ## Download
 
-The artifacts are available on Maven Central. 
+The artifacts are available on Maven Central and the compiler plugin in Gradle Plugin Portal. 
 
 To use the library in a KMM project, use this config in the `build.gradle.kts`:
+
+```kotlin
+plugins {
+    //add ksp and koru compiler plugin
+    id("com.google.devtools.ksp") version "1.6.21-1.0.6"
+    id("com.futuremind.koru").version("0.11.0")
+}
+
+kotlin {
+  
+  sourceSets {
+  
+        val commonMain by getting {
+            dependencies {
+                // add library dependency
+                implementation("com.futuremind:koru:0.11.1")
+            }
+        }
+      
+        val iosMain by creating {
+            ...
+        }
+        
+    }
+    
+}
+
+koru {
+    // let the compiler plugin know where the generated code should be available
+    // by providing the name of ios source set
+    nativeSourceSetNames = listOf("iosMain")
+}
+```
+
+<details>
+  <summary>Legacy kapt support</summary>
+
+Starting from version 0.11.0 this library supports `ksp` which is the recommended way. `kapt` is
+still available, though, with the following configuration.
 
 ```kotlin
 plugins {
@@ -260,10 +299,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.10.0")
+                implementation("com.futuremind:koru:0.11.1")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.10.0"
+                        "com.futuremind", "koru-processor", "0.11.1"
                     )
                 )
 
@@ -279,3 +318,15 @@ kotlin {
     
 }
 ```
+
+</details>
+
+### Compatibility
+
+| Koru   | KSP                                               | Kotlin                          |
+|--------|---------------------------------------------------|---------------------------------|
+| 0.11.1 | 1.6.21-1.0.6<br> 1.7.0-1.0.6<br> 1.7.10-1.0.6<br> | 1.6.21<br> 1.7.0<br> 1.7.10<br> |
+
+This library should be compatible with any version of coroutines.
+
+If you find any compatibility issues, let us know.
