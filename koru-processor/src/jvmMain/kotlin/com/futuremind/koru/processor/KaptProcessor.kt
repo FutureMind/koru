@@ -10,7 +10,6 @@ import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import java.io.File
-import java.util.*
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
@@ -63,7 +62,7 @@ class KaptProcessor : AbstractProcessor() {
                 scopeProviders[it.newTypeName] = it.newSpec
                 kaptGeneratedDir.writeFile(
                     packageName = it.newTypeName.packageName,
-                    fileName = it.newTypeName.simpleName + "Container"
+                    fileName = scopeProviderContainerName(it)
                 ) { addProperty(it.newSpec) }
             }
 
@@ -119,8 +118,7 @@ class KaptProcessor : AbstractProcessor() {
         val scopeClassSpec = (element as TypeElement).toTypeSpec(classInspector)
         val originalClassName = element.getClassName(processingEnv)
         val scopeProviderClassName = ClassName(packageName, scopeClassSpec.name.toString())
-        val scopePropertyName =
-            "exportedScopeProvider_" + scopeClassSpec.name!!.replaceFirstChar { it.lowercase(Locale.ROOT) }
+        val scopePropertyName = scopeProviderPropertyName(scopeProviderClassName)
 
         scopeClassSpec.assertExtendsScopeProvider()
 
@@ -226,8 +224,6 @@ class KaptProcessor : AbstractProcessor() {
     }
 
 }
-
-//TODO refactor
 
 internal fun Element.getPackage(processingEnv: ProcessingEnvironment) =
     processingEnv.elementUtils.getPackageOf(this).toString()

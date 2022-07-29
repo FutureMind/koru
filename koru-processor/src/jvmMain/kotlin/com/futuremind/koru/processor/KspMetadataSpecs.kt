@@ -31,11 +31,7 @@ fun KSClassDeclaration.toTypeSpec(): TypeSpec {
             getDeclaredFunctions()
                 .filterNot { it.isConstructor() }
                 .toList()
-                .map {
-                    println("A: ${it.returnType}")
-                    println("B: ${it.returnType?.toTypeName()}")
-                    it.toFunSpec()
-                }
+                .map { it.toFunSpec() }
         )
         .addProperties(
             getDeclaredProperties()

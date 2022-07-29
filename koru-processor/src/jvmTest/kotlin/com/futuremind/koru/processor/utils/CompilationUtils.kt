@@ -97,7 +97,7 @@ private object KSPRuntimeCompiler {
         require(pass1.exitCode == KotlinCompilation.ExitCode.OK) {
             "Cannot do the 1st pass \n ${pass1.messages}"
         }
-        debugPrintGenerated(kspGeneratedSources(tempDir))
+//        debugPrintGenerated(kspGeneratedSources(tempDir))
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
             inheritClassPath = true

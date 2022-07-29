@@ -4,6 +4,7 @@ import com.futuremind.koru.NoScopeProvider
 import com.futuremind.koru.ToNativeClass
 import com.futuremind.koru.ToNativeInterface
 import com.squareup.kotlinpoet.*
+import java.util.Locale
 
 fun interfaceName(
     annotation: ToNativeInterface,
@@ -14,6 +15,14 @@ fun className(
     annotation: ToNativeClass,
     originalTypeName: String
 ) = annotation.name.ifEmpty { "${originalTypeName}Native" }
+
+fun scopeProviderContainerName(
+    generatedProperty: GeneratedPropertySpec
+) = "${generatedProperty.newTypeName.simpleName}Container"
+
+fun scopeProviderPropertyName(
+    scopeProviderClassName: ClassName
+) = "exportedScopeProvider_" + scopeProviderClassName.simpleName.replaceFirstChar { it.lowercase(Locale.ROOT) }
 
 fun findMatchingScopeProvider(
     scopeProviderTypeName: TypeName?,

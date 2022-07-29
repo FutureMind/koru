@@ -19,7 +19,6 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
-import java.util.*
 import kotlin.reflect.KClass
 
 
@@ -47,7 +46,7 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
                 scopeProviders[it.newTypeName] = it.newSpec
                 codeGenerator.writeFile(
                     packageName = it.newTypeName.packageName,
-                    fileName = "${it.newTypeName.simpleName}Container"
+                    fileName = scopeProviderContainerName(it)
                 ) { addProperty(it.newSpec) }
             }
 
@@ -80,8 +79,7 @@ class KspProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
 
     private fun generateScopeProvider(classDeclaration: KSClassDeclaration): GeneratedPropertySpec {
         val scopeProviderClassName = classDeclaration.toClassName()
-        val scopePropertyName = "exportedScopeProvider_" +
-                scopeProviderClassName.simpleName.replaceFirstChar { it.lowercase(Locale.ROOT) }
+        val scopePropertyName = scopeProviderPropertyName(scopeProviderClassName)
 
         classDeclaration.assertExtendsScopeProvider()
 
