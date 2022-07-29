@@ -6,6 +6,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import java.io.File
 
 
 class CompilerPlugin : Plugin<Project> {
@@ -29,7 +30,7 @@ class CompilerPlugin : Plugin<Project> {
 
     private fun Project.enableKspRunForCommonMainSourceSet() = dependencies {
         //todo don't hardcode version
-        add("kspCommonMainMetadata", "com.futuremind:koru-processor:0.11.0")
+        add("kspCommonMainMetadata", "com.futuremind:koru-processor:0.11.1")
     }
 
     private fun Project.makeSureCompilationIsRunAfterKsp() = tasks
@@ -55,7 +56,7 @@ class CompilerPlugin : Plugin<Project> {
             sourceSetNames.contains(it.name)
         }
         .configureEach {
-            kotlin.srcDir("${project.buildDir.absolutePath}/generated/ksp/metadata/commonMain/kotlin")
+            kotlin.srcDir("${project.buildDir.absolutePath}${File.separator}generated${File.separator}ksp${File.separator}metadata${File.separator}commonMain${File.separator}kotlin")
         }
 }
 
