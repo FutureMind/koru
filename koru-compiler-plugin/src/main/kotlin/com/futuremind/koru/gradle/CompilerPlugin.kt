@@ -30,7 +30,7 @@ class CompilerPlugin : Plugin<Project> {
 
     private fun Project.enableKspRunForCommonMainSourceSet() = dependencies {
         //todo don't hardcode version
-        add("kspCommonMainMetadata", "com.futuremind:koru-processor:0.11.1")
+        add("kspCommonMainMetadata", "com.futuremind:koru-processor:0.12.0-SNAPSHOT")
     }
 
     private fun Project.makeSureCompilationIsRunAfterKsp() = tasks
@@ -55,6 +55,7 @@ class CompilerPlugin : Plugin<Project> {
         .matching {
             sourceSetNames.contains(it.name)
         }
+            //TODO check if any matched, if not, throw an error because something is definitely wrong
         .configureEach {
             kotlin.srcDir("${project.buildDir.absolutePath}${File.separator}generated${File.separator}ksp${File.separator}metadata${File.separator}commonMain${File.separator}kotlin")
         }

@@ -31,27 +31,27 @@ class PublishPlugin : Plugin<Project> {
             val pomName = extension.pomName ?: throwIllegalConfig("pomName")
             val pomDescription = extension.pomDescription ?: throwIllegalConfig("pomDescription")
 
-            try {
-                val javadocJar = project.createJavaDoc()
-                project.configureMavenPublication(javadocJar, pomName, pomDescription)
-                project.configureArtifactSigning()
-            } catch (e: Exception) {
-                logger.warn("Warning: Publish config missing (no local.properties), skipping.")
-            }
+            val javadocJar = project.createJavaDoc()
+            project.configureMavenPublication(javadocJar, pomName, pomDescription)
+            project.configureArtifactSigning()
         }
 
     }
 
-    private fun Project.createJavaDoc() : Jar {
+    private fun Project.createJavaDoc(): Jar {
         project.tasks.getByName<DokkaTask>("dokkaJavadoc") {
             outputDirectory.set(project.rootProject.file("${project.buildDir}/dokka"))
             dokkaSourceSets {
                 configureEach {
                     suppress.set(true)
                 }
-                val commonMain by getting {
-                    suppress.set(false)
-                    platform.set(org.jetbrains.dokka.Platform.jvm)
+                try {
+                    val commonMain by getting {
+                        suppress.set(false)
+                        platform.set(org.jetbrains.dokka.Platform.jvm)
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Warning: ${e.message}")
                 }
             }
         }
@@ -65,7 +65,11 @@ class PublishPlugin : Plugin<Project> {
         return javadocJar
     }
 
-    private fun Project.configureMavenPublication(javadocJar: Jar, pomName: String, pomDescription: String) {
+    private fun Project.configureMavenPublication(
+        javadocJar: Jar,
+        pomName: String,
+        pomDescription: String
+    ) {
         project.extensions.configure(PublishingExtension::class) {
 
             val localProperties = loadLocalProperties(rootProject)
@@ -129,9 +133,9 @@ class PublishPlugin : Plugin<Project> {
     Sign all artifacts
     Requires following properties to be set in ~/.gradle/gradle.properties
     (don't put credentials in project's gradle.properties!)
-        signing.keyId=
-        signing.password=
-        signing.secretKeyRingFile=
+    signing.keyId=
+    signing.password=
+    signing.secretKeyRingFile=
      */
     private fun Project.configureArtifactSigning() {
         project.extensions.getByType<SigningExtension>().run {
@@ -139,7 +143,8 @@ class PublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun throwIllegalConfig(emptyParam: String): Nothing = throw IllegalStateException("You need to provide $emptyParam in koruPublishing plugin")
+    private fun throwIllegalConfig(emptyParam: String): Nothing =
+        throw IllegalStateException("You need to provide $emptyParam in koruPublishing plugin")
 }
 
 open class PublishPluginExtension {

@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     id("maven-publish")
-    id("com.gradle.plugin-publish") version "1.0.0"
+//    id("com.gradle.plugin-publish") version "1.0.0"
     id("com.futuremind.koru.publish")
 }
 
@@ -23,12 +23,12 @@ gradlePlugin {
         }
     }
 }
-
-pluginBundle {
-    website = "https://github.com/FutureMind/koru"
-    vcsUrl = "https://github.com/FutureMind/koru"
-    tags = listOf("coroutines", "kmm", "kmp", "kotlin", "multiplatform", "native", "swift", "suspend", "flow", "kotlin-multiplatform", "kotlin-native")
-}
+//
+//pluginBundle {
+//    website = "https://github.com/FutureMind/koru"
+//    vcsUrl = "https://github.com/FutureMind/koru"
+//    tags = listOf("coroutines", "kmm", "kmp", "kotlin", "multiplatform", "native", "swift", "suspend", "flow", "kotlin-multiplatform", "kotlin-native")
+//}
 
 koruPublishing {
     pomName = "Koru - Gradle Plugin"
