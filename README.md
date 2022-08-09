@@ -246,7 +246,7 @@ To use the library in a KMM project, use this config in the `build.gradle.kts`:
 plugins {
     //add ksp and koru compiler plugin
     id("com.google.devtools.ksp") version "1.6.21-1.0.6"
-    id("com.futuremind.koru").version("0.11.0")
+    id("com.futuremind.koru").version("0.11.1")
 }
 
 kotlin {
