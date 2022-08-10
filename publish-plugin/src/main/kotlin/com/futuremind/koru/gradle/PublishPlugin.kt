@@ -13,6 +13,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.*
 import org.jetbrains.dokka.gradle.DokkaTask
+import java.io.FileNotFoundException
 
 
 class PublishPlugin : Plugin<Project> {
@@ -30,9 +31,14 @@ class PublishPlugin : Plugin<Project> {
             val pomName = extension.pomName ?: throwIllegalConfig("pomName")
             val pomDescription = extension.pomDescription ?: throwIllegalConfig("pomDescription")
 
-            val javadocJar = project.createJavaDoc()
-            project.configureMavenPublication(javadocJar, pomName, pomDescription)
-            project.configureArtifactSigning()
+            try {
+                val javadocJar = project.createJavaDoc()
+                project.configureMavenPublication(javadocJar, pomName, pomDescription)
+                project.configureArtifactSigning()
+            } catch (e: FileNotFoundException) {
+                //we can safely ignore that, will be missing in e.g. CI env
+                logger.warn("Warning: Publish config missing (no local.properties), skipping.")
+            }
         }
 
     }
