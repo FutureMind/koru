@@ -1,7 +1,6 @@
 package com.futuremind.koru.gradle
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import org.gradle.api.*
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.plugins.PublishingPlugin
@@ -46,23 +45,25 @@ class PublishPlugin : Plugin<Project> {
                     suppress.set(true)
                 }
                 try {
+                    //we only want the docs for maven central artifacts and javadoc doesn't
+                    //really make sense for multiplatform projects
                     val commonMain by getting {
                         suppress.set(false)
                         platform.set(org.jetbrains.dokka.Platform.jvm)
                     }
-                } catch (e: Exception) {
+                } catch (e: UnknownDomainObjectException) {
                     logger.warn("Warning: ${e.message}")
                 }
             }
         }
-        val javadocJar by project.tasks.creating(Jar::class) {
+        val koruJavadocJar by project.tasks.creating(Jar::class) {
             val dokkaTask = project.tasks.getByName<DokkaTask>("dokkaJavadoc")
             from(dokkaTask.outputDirectory)
             dependsOn(dokkaTask)
             dependsOn("build")
             archiveClassifier.value("javadoc")
         }
-        return javadocJar
+        return koruJavadocJar
     }
 
     private fun Project.configureMavenPublication(
@@ -139,7 +140,11 @@ class PublishPlugin : Plugin<Project> {
      */
     private fun Project.configureArtifactSigning() {
         project.extensions.getByType<SigningExtension>().run {
-            sign(project.extensions.getByType<PublishingExtension>().publications)
+            try {
+                sign(project.extensions.getByType<PublishingExtension>().publications)
+            } catch (e: InvalidUserDataException) {
+                logger.warn("Could not create signing task (it's probably fine, it might have been added by gradle-portal-plugin: ${e.message}")
+            }
         }
     }
 
