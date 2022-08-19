@@ -1112,4 +1112,45 @@ class TypesGenerationTest {
         generatedClass shouldNotContain "this.freeze()"
     }
 
+    @ParameterizedTest
+    @EnumSource(ProcessorType::class)
+    fun `should strip expect modifier from wrapped type`(processorType: ProcessorType) {
+
+        val classToWrap = SourceFile.kotlin(
+            "expect1.kt",
+            """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+                        import kotlinx.coroutines.flow.Flow
+                        
+                            @ToNativeClass(name = "LeExpected")
+                            expect class LeClass {
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+
+                            actual class LeClass {
+                                actual suspend fun suspending(whatever: Int) : Float = TODO()
+                                actual fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                    """
+        )
+
+        val compilationResult = compile(
+            sources = listOf(classToWrap),
+            tempDir = tempDir,
+            processorType = processorType
+        )
+
+        debugPrintGenerated(compilationResult.generatedFiles(processorType, tempDir))
+
+        val expectedClass = compilationResult.generatedFiles(processorType, tempDir)
+            .getContentByFilename("LeExpected.kt")
+
+        expectedClass shouldContain "FlowWrapper<Float> ="
+        expectedClass shouldContain "FlowWrapper(scopeProvider, false"
+        expectedClass shouldContain "SuspendWrapper(scopeProvider, false"
+    }
+
 }
