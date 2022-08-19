@@ -22,7 +22,7 @@ class CompilerPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.requireKspPluginDependency(){
+    private fun Project.requireKspPluginDependency() {
         requireNotNull(pluginManager.findPlugin("com.google.devtools.ksp")) {
             "You need to provide ksp plugin, e.g. plugins { id(\"com.google.devtools.ksp\") version \"1.7.0-1.0.6\" }"
         }
@@ -50,15 +50,19 @@ class CompilerPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.addGeneratedFilesToSourceSets(sourceSetNames: List<String>) = extensions
-        .getByType<KotlinMultiplatformExtension>().sourceSets
-        .matching {
-            sourceSetNames.contains(it.name)
-        }
-            //TODO check if any matched, if not, throw an error because something is definitely wrong
-        .configureEach {
-            kotlin.srcDir("${project.buildDir.absolutePath}${File.separator}generated${File.separator}ksp${File.separator}metadata${File.separator}commonMain${File.separator}kotlin")
-        }
+    private fun Project.addGeneratedFilesToSourceSets(sourceSetNames: List<String>) {
+        val anyMatch = extensions
+            .getByType<KotlinMultiplatformExtension>().sourceSets
+            .any { sourceSetNames.contains(it.name) }
+        if (!anyMatch) throw IllegalStateException("None of the provided source set names were matched: $sourceSetNames. You need to provide the name of your main native source set in your build.gradle, e.g. koru.nativeSourceSetNames = listOf(\"iosMain\")")
+
+        extensions
+            .getByType<KotlinMultiplatformExtension>().sourceSets
+            .matching { sourceSetNames.contains(it.name) }
+            .configureEach {
+                kotlin.srcDir("${project.buildDir.absolutePath}${File.separator}generated${File.separator}ksp${File.separator}metadata${File.separator}commonMain${File.separator}kotlin")
+            }
+    }
 }
 
 open class KoruPluginExtension {
