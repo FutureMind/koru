@@ -83,6 +83,8 @@ class WrapperClassBuilder(
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.remove(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
                 }
                 .build()
         }
@@ -102,7 +104,11 @@ class WrapperClassBuilder(
                 )
                 .mutable(false)
                 .setupOverrideModifier(originalPropertySpec)
-                .apply { modifiers.remove(KModifier.ABSTRACT) }
+                .apply {
+                    modifiers.remove(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
+                }
                 .build()
         }
 

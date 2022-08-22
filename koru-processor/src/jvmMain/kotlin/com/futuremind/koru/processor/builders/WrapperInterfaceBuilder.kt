@@ -20,6 +20,8 @@ class WrapperInterfaceBuilder(
                 .apply {
                     modifiers.add(KModifier.ABSTRACT)
                     modifiers.remove(KModifier.SUSPEND)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
                 }
                 .setupOverrideModifier(originalFuncSpec)
                 .build()
@@ -34,7 +36,11 @@ class WrapperInterfaceBuilder(
                     type = originalPropertySpec.wrappedType
                 )
                 .mutable(false)
-                .apply { modifiers.add(KModifier.ABSTRACT) }
+                .apply {
+                    modifiers.add(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
+                }
                 .setupOverrideModifier(originalPropertySpec)
                 .build()
         }

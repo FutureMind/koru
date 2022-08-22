@@ -10,6 +10,7 @@ import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -168,7 +169,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(processorType: ProcessorType) {
+    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(
+        processorType: ProcessorType
+    ) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -222,7 +225,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should match generated class with generated interface if they matched in original code`(processorType: ProcessorType) {
+    fun `should match generated class with generated interface if they matched in original code`(
+        processorType: ProcessorType
+    ) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -405,7 +410,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
+    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -475,7 +482,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
+    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -544,7 +553,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`(processorType: ProcessorType) {
+    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -600,7 +611,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`(processorType: ProcessorType) {
+    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -721,7 +734,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`(processorType: ProcessorType) {
+    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -857,7 +872,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`(processorType: ProcessorType) {
+    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -912,7 +929,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not add override modifier from a foreign interface just because the name matches`(processorType: ProcessorType) {
+    fun `should not add override modifier from a foreign interface just because the name matches`(
+        processorType: ProcessorType
+    ) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -952,7 +971,9 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should keep internal visibility when generating class or add public when omitted`(processorType: ProcessorType) {
+    fun `should keep internal visibility when generating class or add public when omitted`(
+        processorType: ProcessorType
+    ) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -1002,10 +1023,11 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should throw on interface generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
-        source = SourceFile.kotlin(
-            "private.kt",
-            """
+    fun `should throw on interface generation from private type`(processorType: ProcessorType) =
+        testThrowsCompilationError(
+            source = SourceFile.kotlin(
+                "private.kt",
+                """
                         package com.futuremind.kmm101.test
                         
                         import com.futuremind.koru.ToNativeInterface
@@ -1015,18 +1037,19 @@ class TypesGenerationTest {
                             suspend fun suspending(whatever: Int) : Float = TODO()
                         }
                         """
-        ),
-        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir,
-        processorType = processorType
-    )
+            ),
+            expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should throw on class generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
-        source = SourceFile.kotlin(
-            "private.kt",
-            """
+    fun `should throw on class generation from private type`(processorType: ProcessorType) =
+        testThrowsCompilationError(
+            source = SourceFile.kotlin(
+                "private.kt",
+                """
                         package com.futuremind.kmm101.test
                         
                         import com.futuremind.koru.ToNativeClass
@@ -1036,11 +1059,11 @@ class TypesGenerationTest {
                             suspend fun suspending(whatever: Int) : Float = TODO()
                         }
                         """
-        ),
-        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir,
-        processorType = processorType
-    )
+            ),
+            expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
@@ -1103,6 +1126,8 @@ class TypesGenerationTest {
             processorType = processorType
         )
 
+        debugPrintGenerated(compilationResult.generatedFiles(processorType, tempDir))
+
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")
 
@@ -1112,13 +1137,14 @@ class TypesGenerationTest {
         generatedClass shouldNotContain "this.freeze()"
     }
 
-    @ParameterizedTest
-    @EnumSource(ProcessorType::class)
-    fun `should strip expect modifier from wrapped type`(processorType: ProcessorType) {
+    //expect will not be analyzed by kapt, only works for ksp
+    @Test
+    fun `should strip expect modifier from wrapped type`() {
 
-        val classToWrap = SourceFile.kotlin(
-            "expect1.kt",
-            """
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "expect1.kt",
+                """
                         package com.futuremind.kmm101.test
                         
                         import com.futuremind.koru.ToNativeClass
@@ -1126,31 +1152,77 @@ class TypesGenerationTest {
                         
                             @ToNativeClass(name = "LeExpected")
                             expect class LeClass {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
                                 suspend fun suspending(whatever: Int) : Float
                                 fun flow(whatever: Int) : Flow<Float>
                             }
 
                             actual class LeClass {
+                                actual val someVal : Float = TODO()
+                                actual val someValFlow : Flow<Float> = TODO()
+                                actual fun blocking(whatever: Int) : Float = TODO()
                                 actual suspend fun suspending(whatever: Int) : Float = TODO()
                                 actual fun flow(whatever: Int) : Flow<Float> = TODO()
                             }
                     """
-        )
-
-        val compilationResult = compile(
-            sources = listOf(classToWrap),
+            ),
             tempDir = tempDir,
-            processorType = processorType
+            processorType = ProcessorType.KSP,
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.LeExpected"
         )
 
-        debugPrintGenerated(compilationResult.generatedFiles(processorType, tempDir))
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
 
-        val expectedClass = compilationResult.generatedFiles(processorType, tempDir)
-            .getContentByFilename("LeExpected.kt")
+    }
 
-        expectedClass shouldContain "FlowWrapper<Float> ="
-        expectedClass shouldContain "FlowWrapper(scopeProvider, false"
-        expectedClass shouldContain "SuspendWrapper(scopeProvider, false"
+    //actual will not be analyzed by kapt, only works for ksp
+    @Test
+    fun `should strip actual modifier from wrapped type`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "expect1.kt",
+                """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+                        import kotlinx.coroutines.flow.Flow
+
+                            expect class LeClass {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+
+                            @ToNativeClass(name = "LeExpected")
+                            actual class LeClass {
+                                actual val someVal : Float = TODO()
+                                actual val someValFlow : Flow<Float> = TODO()
+                                actual fun blocking(whatever: Int) : Float = TODO()
+                                actual suspend fun suspending(whatever: Int) : Float = TODO()
+                                actual fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                    """
+            ),
+            tempDir = tempDir,
+            processorType = ProcessorType.KSP,
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.LeExpected"
+        )
+
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
     }
 
 }
