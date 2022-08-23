@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.12.0] - 2022-08-23
+### Added
+- Config for SNAPSHOT releases
+- Throw when building ksp without providing the right nativeSourceSetNames
+### Fixed
+- Properly handle expect / actual classes wrapping
+- Don't wrap protected functions and properties
+
 ## [0.11.1] - 2022-07-29
 ### Added
 - Rewritten for KSP (KAPT still available).

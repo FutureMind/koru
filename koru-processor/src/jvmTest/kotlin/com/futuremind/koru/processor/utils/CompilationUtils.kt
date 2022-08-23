@@ -61,6 +61,7 @@ private fun prepareCompilation(
     workingDir = tempDir
     inheritClassPath = true
     sources = sourceFiles
+    kotlincArguments = listOf("-Xmulti-platform") //TODO https://github.com/tschuchortdev/kotlin-compile-testing/issues/303
     verbose = false
     when (processorType) {
         ProcessorType.KAPT -> {
@@ -101,6 +102,7 @@ private object KSPRuntimeCompiler {
         val pass2 = KotlinCompilation().apply {
             sources = compilation.kspGeneratedSourceFiles(tempDir) + compilation.sources
             inheritClassPath = true
+            kotlincArguments = listOf("-Xmulti-platform") //TODO https://github.com/tschuchortdev/kotlin-compile-testing/issues/303
         }.compile()
         require(pass2.exitCode == KotlinCompilation.ExitCode.OK) {
             "Cannot do the 2nd pass \n ${pass2.messages}"
@@ -124,7 +126,7 @@ private fun kspGeneratedSources(tempDir: File): List<File> {
             javaGeneratedDir.walkTopDown()
 }
 
-private fun debugPrintGenerated(files: Collection<File>) = files
+fun debugPrintGenerated(files: Collection<File>) = files
     .filter { it.isFile }
     .forEach {
     println("\n\n"+it.absolutePath+"\n")

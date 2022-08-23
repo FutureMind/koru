@@ -10,9 +10,16 @@ abstract class WrapperBuilder(
     private val generatedInterfaces: Map<TypeName, GeneratedInterfaceSpec>,
 ) {
 
-    protected val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let {
-        if (it.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
-        it.ifEmpty { setOf(KModifier.PUBLIC) }
+    protected val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let { originalModifiers ->
+        if (originalModifiers.isPrivateOrProtected()) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
+        originalModifiers
+            .toMutableSet()
+            .apply {
+                //wrapped type is always in the native source set
+                remove(KModifier.ACTUAL)
+                remove(KModifier.EXPECT)
+            }
+            .ifEmpty { setOf(KModifier.PUBLIC) }
     }
 
     /**
@@ -67,5 +74,7 @@ abstract class WrapperBuilder(
 
         return superInterfaces.any { it.newSpec.containsPropertySignature() }
     }
+
+    protected fun Collection<KModifier>.isPrivateOrProtected() = contains(KModifier.PRIVATE) || contains(KModifier.PROTECTED)
 
 }

@@ -73,7 +73,7 @@ class WrapperClassBuilder(
         .build()
 
     private val functions = originalTypeSpec.funSpecs
-        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .filter { !it.modifiers.isPrivateOrProtected() }
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
@@ -83,12 +83,14 @@ class WrapperClassBuilder(
                 .apply {
                     modifiers.remove(KModifier.SUSPEND)
                     modifiers.remove(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
                 }
                 .build()
         }
 
     private val properties = originalTypeSpec.propertySpecs
-        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .filter { !it.modifiers.isPrivateOrProtected() }
         .map { originalPropertySpec ->
             PropertySpec
                 .builder(
@@ -102,7 +104,11 @@ class WrapperClassBuilder(
                 )
                 .mutable(false)
                 .setupOverrideModifier(originalPropertySpec)
-                .apply { modifiers.remove(KModifier.ABSTRACT) }
+                .apply {
+                    modifiers.remove(KModifier.ABSTRACT)
+                    modifiers.remove(KModifier.ACTUAL)
+                    modifiers.remove(KModifier.EXPECT)
+                }
                 .build()
         }
 

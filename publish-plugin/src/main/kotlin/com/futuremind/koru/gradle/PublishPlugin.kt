@@ -1,7 +1,6 @@
 package com.futuremind.koru.gradle
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import org.gradle.api.*
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.plugins.PublishingPlugin
@@ -14,6 +13,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.*
 import org.jetbrains.dokka.gradle.DokkaTask
+import java.io.FileNotFoundException
 
 
 class PublishPlugin : Plugin<Project> {
@@ -35,37 +35,48 @@ class PublishPlugin : Plugin<Project> {
                 val javadocJar = project.createJavaDoc()
                 project.configureMavenPublication(javadocJar, pomName, pomDescription)
                 project.configureArtifactSigning()
-            } catch (e: Exception) {
+            } catch (e: FileNotFoundException) {
+                //we can safely ignore that, will be missing in e.g. CI env
                 logger.warn("Warning: Publish config missing (no local.properties), skipping.")
             }
         }
 
     }
 
-    private fun Project.createJavaDoc() : Jar {
+    private fun Project.createJavaDoc(): Jar {
         project.tasks.getByName<DokkaTask>("dokkaJavadoc") {
             outputDirectory.set(project.rootProject.file("${project.buildDir}/dokka"))
             dokkaSourceSets {
                 configureEach {
                     suppress.set(true)
                 }
-                val commonMain by getting {
-                    suppress.set(false)
-                    platform.set(org.jetbrains.dokka.Platform.jvm)
+                try {
+                    //we only want the docs for maven central artifacts and javadoc doesn't
+                    //really make sense for multiplatform projects
+                    val commonMain by getting {
+                        suppress.set(false)
+                        platform.set(org.jetbrains.dokka.Platform.jvm)
+                    }
+                } catch (e: UnknownDomainObjectException) {
+                    logger.warn("Warning: ${e.message}")
                 }
             }
         }
-        val javadocJar by project.tasks.creating(Jar::class) {
+        val koruJavadocJar by project.tasks.creating(Jar::class) {
             val dokkaTask = project.tasks.getByName<DokkaTask>("dokkaJavadoc")
             from(dokkaTask.outputDirectory)
             dependsOn(dokkaTask)
             dependsOn("build")
             archiveClassifier.value("javadoc")
         }
-        return javadocJar
+        return koruJavadocJar
     }
 
-    private fun Project.configureMavenPublication(javadocJar: Jar, pomName: String, pomDescription: String) {
+    private fun Project.configureMavenPublication(
+        javadocJar: Jar,
+        pomName: String,
+        pomDescription: String
+    ) {
         project.extensions.configure(PublishingExtension::class) {
 
             val localProperties = loadLocalProperties(rootProject)
@@ -129,17 +140,22 @@ class PublishPlugin : Plugin<Project> {
     Sign all artifacts
     Requires following properties to be set in ~/.gradle/gradle.properties
     (don't put credentials in project's gradle.properties!)
-        signing.keyId=
-        signing.password=
-        signing.secretKeyRingFile=
+    signing.keyId=
+    signing.password=
+    signing.secretKeyRingFile=
      */
     private fun Project.configureArtifactSigning() {
         project.extensions.getByType<SigningExtension>().run {
-            sign(project.extensions.getByType<PublishingExtension>().publications)
+            try {
+                sign(project.extensions.getByType<PublishingExtension>().publications)
+            } catch (e: InvalidUserDataException) {
+                logger.warn("Could not create signing task (it's probably fine, it might have been added by gradle-portal-plugin: ${e.message}")
+            }
         }
     }
 
-    private fun throwIllegalConfig(emptyParam: String): Nothing = throw IllegalStateException("You need to provide $emptyParam in koruPublishing plugin")
+    private fun throwIllegalConfig(emptyParam: String): Nothing =
+        throw IllegalStateException("You need to provide $emptyParam in koruPublishing plugin")
 }
 
 open class PublishPluginExtension {

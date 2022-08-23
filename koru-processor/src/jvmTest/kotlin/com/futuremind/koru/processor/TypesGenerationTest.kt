@@ -10,6 +10,7 @@ import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -337,7 +338,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not wrap private members when generating class`(processorType: ProcessorType) {
+    fun `should not wrap private or protected members when generating class`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -349,7 +350,7 @@ class TypesGenerationTest {
                             import kotlinx.coroutines.flow.Flow
 
                             @ToNativeClass
-                            class PrivateFunctionsExample {
+                            open class PrivateFunctionsExample {
                                 val someVal : Float = TODO()
                                 val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
@@ -360,6 +361,11 @@ class TypesGenerationTest {
                                 private fun blockingPrivate(whatever: Int) : Float = TODO()
                                 private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
                                 private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
+                                protected val someValProtected : Float = TODO()
+                                protected val someValFlowProtected : Flow<Float> = TODO()
+                                protected fun blockingProtected(whatever: Int) : Float = TODO()
+                                protected suspend fun suspendingProtected(whatever: Int) : Float = TODO()
+                                protected fun flowProtected(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
             ),
@@ -1002,10 +1008,11 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should throw on interface generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
-        source = SourceFile.kotlin(
-            "private.kt",
-            """
+    fun `should throw on interface generation from private type`(processorType: ProcessorType) =
+        testThrowsCompilationError(
+            source = SourceFile.kotlin(
+                "private.kt",
+                """
                         package com.futuremind.kmm101.test
                         
                         import com.futuremind.koru.ToNativeInterface
@@ -1015,18 +1022,19 @@ class TypesGenerationTest {
                             suspend fun suspending(whatever: Int) : Float = TODO()
                         }
                         """
-        ),
-        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir,
-        processorType = processorType
-    )
+            ),
+            expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should throw on class generation from private type`(processorType: ProcessorType) = testThrowsCompilationError(
-        source = SourceFile.kotlin(
-            "private.kt",
-            """
+    fun `should throw on class generation from private type`(processorType: ProcessorType) =
+        testThrowsCompilationError(
+            source = SourceFile.kotlin(
+                "private.kt",
+                """
                         package com.futuremind.kmm101.test
                         
                         import com.futuremind.koru.ToNativeClass
@@ -1036,11 +1044,11 @@ class TypesGenerationTest {
                             suspend fun suspending(whatever: Int) : Float = TODO()
                         }
                         """
-        ),
-        expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
-        tempDir = tempDir,
-        processorType = processorType
-    )
+            ),
+            expectedMessage = "Cannot wrap types with `private` modifier. Consider using internal or public.",
+            tempDir = tempDir,
+            processorType = processorType
+        )
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
@@ -1110,6 +1118,94 @@ class TypesGenerationTest {
         generatedClass shouldContain "FlowWrapper(scopeProvider, false"
         generatedClass shouldContain "SuspendWrapper(scopeProvider, false"
         generatedClass shouldNotContain "this.freeze()"
+    }
+
+    //expect will not be analyzed by kapt, only works for ksp
+    @Test
+    fun `should strip expect modifier from wrapped type`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "expect1.kt",
+                """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+                        import kotlinx.coroutines.flow.Flow
+                        
+                            @ToNativeClass(name = "LeExpected")
+                            expect class LeClass {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+
+                            actual class LeClass {
+                                actual val someVal : Float = TODO()
+                                actual val someValFlow : Flow<Float> = TODO()
+                                actual fun blocking(whatever: Int) : Float = TODO()
+                                actual suspend fun suspending(whatever: Int) : Float = TODO()
+                                actual fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                    """
+            ),
+            tempDir = tempDir,
+            processorType = ProcessorType.KSP,
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.LeExpected"
+        )
+
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
+    }
+
+    //actual will not be analyzed by kapt, only works for ksp
+    @Test
+    fun `should strip actual modifier from wrapped type`() {
+
+        val generatedType = compileAndReturnGeneratedClass(
+            source = SourceFile.kotlin(
+                "expect1.kt",
+                """
+                        package com.futuremind.kmm101.test
+                        
+                        import com.futuremind.koru.ToNativeClass
+                        import kotlinx.coroutines.flow.Flow
+
+                            expect class LeClass {
+                                val someVal : Float
+                                val someValFlow : Flow<Float>
+                                fun blocking(whatever: Int) : Float
+                                suspend fun suspending(whatever: Int) : Float
+                                fun flow(whatever: Int) : Flow<Float>
+                            }
+
+                            @ToNativeClass(name = "LeExpected")
+                            actual class LeClass {
+                                actual val someVal : Float = TODO()
+                                actual val someValFlow : Flow<Float> = TODO()
+                                actual fun blocking(whatever: Int) : Float = TODO()
+                                actual suspend fun suspending(whatever: Int) : Float = TODO()
+                                actual fun flow(whatever: Int) : Flow<Float> = TODO()
+                            }
+                    """
+            ),
+            tempDir = tempDir,
+            processorType = ProcessorType.KSP,
+            generatedClassCanonicalName = "com.futuremind.kmm101.test.LeExpected"
+        )
+
+        generatedType.memberReturnType("someVal") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("someValFlow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+        generatedType.memberReturnType("blocking") shouldBe "kotlin.Float"
+        generatedType.memberReturnType("suspending") shouldBe "com.futuremind.koru.SuspendWrapper<kotlin.Float>"
+        generatedType.memberReturnType("flow") shouldBe "com.futuremind.koru.FlowWrapper<kotlin.Float>"
+
     }
 
 }
