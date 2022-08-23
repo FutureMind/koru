@@ -12,7 +12,7 @@ class WrapperInterfaceBuilder(
 ) : WrapperBuilder(originalTypeName, originalTypeSpec, generatedInterfaces) {
 
     private val functions = originalTypeSpec.funSpecs
-        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .filter { !it.modifiers.isPrivateOrProtected() }
         .map { originalFuncSpec ->
             originalFuncSpec.toBuilder(name = originalFuncSpec.name)
                 .clearBody()
@@ -28,7 +28,7 @@ class WrapperInterfaceBuilder(
         }
 
     private val properties = originalTypeSpec.propertySpecs
-        .filter { !it.modifiers.contains(KModifier.PRIVATE) }
+        .filter { !it.modifiers.isPrivateOrProtected() }
         .map { originalPropertySpec ->
             PropertySpec
                 .builder(

@@ -342,7 +342,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not wrap private members when generating class`(processorType: ProcessorType) {
+    fun `should not wrap private or protected members when generating class`(processorType: ProcessorType) {
 
         compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -365,6 +365,11 @@ class TypesGenerationTest {
                                 private fun blockingPrivate(whatever: Int) : Float = TODO()
                                 private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
                                 private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
+                                private val someValProtected : Float = TODO()
+                                private val someValFlowProtected : Flow<Float> = TODO()
+                                private fun blockingProtected(whatever: Int) : Float = TODO()
+                                private suspend fun suspendingProtected(whatever: Int) : Float = TODO()
+                                private fun flowProtected(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
             ),

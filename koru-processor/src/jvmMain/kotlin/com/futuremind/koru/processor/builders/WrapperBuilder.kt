@@ -11,7 +11,7 @@ abstract class WrapperBuilder(
 ) {
 
     protected val modifiers: Set<KModifier> = originalTypeSpec.modifiers.let { originalModifiers ->
-        if (originalModifiers.contains(KModifier.PRIVATE)) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
+        if (originalModifiers.isPrivateOrProtected()) throw IllegalStateException("Cannot wrap types with `private` modifier. Consider using internal or public.")
         originalModifiers
             .toMutableSet()
             .apply {
@@ -74,5 +74,7 @@ abstract class WrapperBuilder(
 
         return superInterfaces.any { it.newSpec.containsPropertySignature() }
     }
+
+    protected fun Collection<KModifier>.isPrivateOrProtected() = contains(KModifier.PRIVATE) || contains(KModifier.PROTECTED)
 
 }
