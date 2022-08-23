@@ -169,9 +169,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(
-        processorType: ProcessorType
-    ) {
+    fun `should generate interface and a class extending it, when annotating same class with both @ToNativeClass and @ToNativeInterface`(processorType: ProcessorType) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -225,9 +223,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should match generated class with generated interface if they matched in original code`(
-        processorType: ProcessorType
-    ) {
+    fun `should match generated class with generated interface if they matched in original code`(processorType: ProcessorType) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -354,7 +350,7 @@ class TypesGenerationTest {
                             import kotlinx.coroutines.flow.Flow
 
                             @ToNativeClass
-                            class PrivateFunctionsExample {
+                            open class PrivateFunctionsExample {
                                 val someVal : Float = TODO()
                                 val someValFlow : Flow<Float> = TODO()
                                 fun blocking(whatever: Int) : Float = TODO()
@@ -365,11 +361,11 @@ class TypesGenerationTest {
                                 private fun blockingPrivate(whatever: Int) : Float = TODO()
                                 private suspend fun suspendingPrivate(whatever: Int) : Float = TODO()
                                 private fun flowPrivate(whatever: Int) : Flow<Float> = TODO()
-                                private val someValProtected : Float = TODO()
-                                private val someValFlowProtected : Flow<Float> = TODO()
-                                private fun blockingProtected(whatever: Int) : Float = TODO()
-                                private suspend fun suspendingProtected(whatever: Int) : Float = TODO()
-                                private fun flowProtected(whatever: Int) : Flow<Float> = TODO()
+                                protected val someValProtected : Float = TODO()
+                                protected val someValFlowProtected : Flow<Float> = TODO()
+                                protected fun blockingProtected(whatever: Int) : Float = TODO()
+                                protected suspend fun suspendingProtected(whatever: Int) : Float = TODO()
+                                protected fun flowProtected(whatever: Int) : Flow<Float> = TODO()
                             }
                         """
             ),
@@ -415,9 +411,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`(
-        processorType: ProcessorType
-    ) {
+    fun `should not extend superinterface on class if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -487,9 +481,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(
-        processorType: ProcessorType
-    ) {
+    fun `should not extend superinterface on interface if it is not annotated (and thus should strip override annotation)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -558,9 +550,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`(
-        processorType: ProcessorType
-    ) {
+    fun `should extend multiple @ToNativeInterface superinterfaces (on standalone annotated interfaces)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -616,9 +606,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`(
-        processorType: ProcessorType
-    ) {
+    fun `should extend multiple @ToNativeInterface superinterfaces including the one annotated directly on class`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -739,9 +727,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`(
-        processorType: ProcessorType
-    ) {
+    fun `should generate complex inheritance hierarchy with intermediate unannotated interface (Y)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -877,9 +863,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`(
-        processorType: ProcessorType
-    ) {
+    fun `should not extend a foreign generated interface (one that has not been a superinterface of the original class)`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -934,9 +918,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should not add override modifier from a foreign interface just because the name matches`(
-        processorType: ProcessorType
-    ) {
+    fun `should not add override modifier from a foreign interface just because the name matches`(processorType: ProcessorType) {
 
         val generatedType = compileAndReturnGeneratedClass(
             source = SourceFile.kotlin(
@@ -976,9 +958,7 @@ class TypesGenerationTest {
 
     @ParameterizedTest
     @EnumSource(ProcessorType::class)
-    fun `should keep internal visibility when generating class or add public when omitted`(
-        processorType: ProcessorType
-    ) {
+    fun `should keep internal visibility when generating class or add public when omitted`(processorType: ProcessorType) {
 
         val compilationResult = compile(
             sources = listOf(
@@ -1130,8 +1110,6 @@ class TypesGenerationTest {
             tempDir = tempDir,
             processorType = processorType
         )
-
-        debugPrintGenerated(compilationResult.generatedFiles(processorType, tempDir))
 
         val generatedClass = compilationResult.generatedFiles(processorType, tempDir)
             .getContentByFilename("FreezeExample$defaultClassNameSuffix.kt")

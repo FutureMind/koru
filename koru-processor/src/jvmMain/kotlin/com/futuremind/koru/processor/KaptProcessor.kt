@@ -38,8 +38,6 @@ class KaptProcessor : AbstractProcessor() {
         roundEnv: RoundEnvironment
     ) = try {
 
-        println("Start the processor") //TODO temp
-
         val kaptGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
             ?: throw IllegalStateException("Cannot access kaptKotlinGeneratedDir")
 
