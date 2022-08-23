@@ -299,10 +299,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 ...
-                implementation("com.futuremind:koru:0.11.1")
+                implementation("com.futuremind:koru:0.12.0")
                 configurations.get("kapt").dependencies.add(
                     org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency(
-                        "com.futuremind", "koru-processor", "0.11.1"
+                        "com.futuremind", "koru-processor", "0.12.0"
                     )
                 )
 
@@ -323,9 +323,9 @@ kotlin {
 
 ### Compatibility
 
-| Koru   | KSP                                               | Kotlin                          |
-|--------|---------------------------------------------------|---------------------------------|
-| 0.11.1 | 1.6.21-1.0.6<br> 1.7.0-1.0.6<br> 1.7.10-1.0.6<br> | 1.6.21<br> 1.7.0<br> 1.7.10<br> |
+| Koru             | KSP                                         | Kotlin                    |
+|------------------|---------------------------------------------|---------------------------|
+| 0.11.1<br>0.12.0 | 1.6.21-1.0.6<br>1.7.0-1.0.6<br>1.7.10-1.0.6 | 1.6.21<br>1.7.0<br>1.7.10 |
 
 This library should be compatible with any version of coroutines.
 
