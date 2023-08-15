@@ -19,6 +19,7 @@ class WrapperClassBuilder(
     companion object {
         private const val WRAPPED_PROPERTY_NAME = "wrapped"
         private const val SCOPE_PROVIDER_PROPERTY_NAME = "scopeProvider"
+        private val SUSPEND_WRAPPER_TYPE_NAME = SuspendWrapper::class.asTypeName()
     }
 
     private val constructorSpec = FunSpec
@@ -132,7 +133,7 @@ class WrapperClassBuilder(
         originalFunSpec: FunSpec
     ): FunSpec.Builder = addCode(
         buildCodeBlock {
-            add("return %T(", SuspendWrapper::class)
+            add("return %T(", SUSPEND_WRAPPER_TYPE_NAME)
             add(SCOPE_PROVIDER_PROPERTY_NAME)
             add(", ")
             add("%L", freezeWrapper)
