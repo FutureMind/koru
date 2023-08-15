@@ -2,7 +2,7 @@ rootProject.name = "Koru"
 
 gradle.allprojects {
     group = "com.futuremind"
-    version = "0.12.0"
+    version = "0.13.0"
 }
 
 includeBuild("publish-plugin")
