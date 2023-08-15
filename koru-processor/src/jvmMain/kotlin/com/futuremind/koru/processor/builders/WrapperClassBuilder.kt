@@ -20,6 +20,7 @@ class WrapperClassBuilder(
         private const val WRAPPED_PROPERTY_NAME = "wrapped"
         private const val SCOPE_PROVIDER_PROPERTY_NAME = "scopeProvider"
         private val SUSPEND_WRAPPER_TYPE_NAME = SuspendWrapper::class.asTypeName()
+        private val FLOW_WRAPPER_TYPE_NAME = FlowWrapper::class.asTypeName()
     }
 
     private val constructorSpec = FunSpec
@@ -150,7 +151,7 @@ class WrapperClassBuilder(
     )
 
     private fun flowWrapperFunctionBody(callOriginal: String) = buildCodeBlock {
-        add("return %T(", FlowWrapper::class)
+        add("return %T(", FLOW_WRAPPER_TYPE_NAME)
         add(SCOPE_PROVIDER_PROPERTY_NAME)
         add(", %L", freezeWrapper)
         add(", ${callOriginal})")
