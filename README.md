@@ -246,7 +246,7 @@ To use the library in a KMM project, use this config in the `build.gradle.kts`:
 plugins {
     //add ksp and koru compiler plugin
     id("com.google.devtools.ksp") version "1.6.21-1.0.6"
-    id("com.futuremind.koru").version("0.11.1")
+    id("com.futuremind.koru").version("0.13.0")
 }
 
 kotlin {
@@ -256,7 +256,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // add library dependency
-                implementation("com.futuremind:koru:0.11.1")
+                implementation("com.futuremind:koru:0.13.0")
             }
         }
       
@@ -266,12 +266,6 @@ kotlin {
         
     }
     
-}
-
-koru {
-    // let the compiler plugin know where the generated code should be available
-    // by providing the name of ios source set
-    nativeSourceSetNames = listOf("iosMain")
 }
 ```
 
